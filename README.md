@@ -269,6 +269,9 @@ git init && git add -A && git commit -m "ระบบแจ้งปัญหา
 - **Mount path:** `/data`
 - `Dockerfile` ตั้ง `UPLOAD_DIR=/data/uploads` ไว้แล้ว จึงเก็บลง volume นี้อัตโนมัติ
 
+> Railway **ไม่รองรับคำสั่ง `VOLUME` ใน Dockerfile** (build จะล้มด้วย `docker VOLUME ... is not supported`)
+> จึงต้องประกาศ volume จาก dashboard เท่านั้น — Dockerfile ของโปรเจกต์นี้ไม่มีคำสั่งนั้นแล้ว
+
 **6. เปิดโดเมน**
 
 - **Settings → Networking → Generate Domain**
