@@ -1,0 +1,70 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1) ติดตั้ง dependencies ทั้งหมด",
+      "type": "shell",
+      "command": "npm run install:all",
+      "problemMatcher": []
+    },
+    {
+      "label": "2) เริ่ม MongoDB (Docker)",
+      "type": "shell",
+      "command": "npm run db:up",
+      "problemMatcher": []
+    },
+    {
+      "label": "3) ใส่ข้อมูลตัวอย่าง (seed)",
+      "type": "shell",
+      "command": "npm run seed",
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: API (ใช้ MongoDB จริง)",
+      "type": "shell",
+      "command": "npm run dev:server",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "Backend: API (โหมดสาธิต — ไม่ต้องมี MongoDB)",
+      "type": "shell",
+      "command": "npm run dev:demo",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "Frontend: เว็บ (Vite)",
+      "type": "shell",
+      "command": "npm run dev:client",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "▶ รันทั้งระบบ (โหมดสาธิต)",
+      "dependsOn": [
+        "Backend: API (โหมดสาธิต — ไม่ต้องมี MongoDB)",
+        "Frontend: เว็บ (Vite)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "▶ รันทั้งระบบ (MongoDB จริง)",
+      "dependsOn": ["Backend: API (ใช้ MongoDB จริง)", "Frontend: เว็บ (Vite)"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "ทดสอบระบบ (e2e + socket)",
+      "type": "shell",
+      "command": "npm test",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

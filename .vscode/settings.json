@@ -1,0 +1,10 @@
+{
+  "files.eol": "\n",
+  "editor.tabSize": 2,
+  "[vue]": { "editor.defaultFormatter": "Vue.volar" },
+  "emmet.includeLanguages": { "vue-html": "html" },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true
+  }
+}

@@ -1,0 +1,41 @@
+# Render Blueprint — ระบบแจ้งปัญหา IT (deploy แบบเซิร์ฟเวอร์เดียว)
+# เซิร์ฟเวอร์ตัวเดียวเสิร์ฟทั้ง REST API, WebSocket และหน้าเว็บที่ build แล้ว
+#
+# วิธีใช้: Render Dashboard → New → Blueprint → เลือก repo นี้
+# แล้วกรอก MONGODB_URI (จาก MongoDB Atlas) ตอนที่ระบบถาม
+
+services:
+  - type: web
+    name: itsm
+    runtime: node
+    plan: free
+    region: singapore          # ใกล้ไทยที่สุด — เปลี่ยนได้ตามต้องการ
+
+    buildCommand: npm run install:all && npm run build
+    startCommand: node server/src/index.js
+
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Render สุ่มค่าให้อัตโนมัติตอนสร้างครั้งแรก และเก็บค่าเดิมไว้ตลอด
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: JWT_EXPIRES_IN
+        value: 7d
+
+      # ต้องกรอกเอง — connection string จาก MongoDB Atlas
+      # เช่น mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/itsm?retryWrites=true&w=majority
+      - key: MONGODB_URI
+        sync: false
+
+      # ใส่ข้อมูลตั้งต้น (ผู้ใช้ หมวดหมู่ กฎ ฐานความรู้) ให้อัตโนมัติเมื่อฐานข้อมูลยังว่าง
+      # เมื่อระบบเริ่มใช้งานจริงแล้ว แนะนำให้เปลี่ยนเป็น false
+      - key: SEED_ON_START
+        value: "true"
+
+      # ไม่ต้องตั้ง CLIENT_ORIGIN สำหรับ deploy แบบเซิร์ฟเวอร์เดียว
+      # ระบบอ่านโดเมนจาก RENDER_EXTERNAL_URL ที่ Render ตั้งให้เองอยู่แล้ว

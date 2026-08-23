@@ -1,0 +1,23 @@
+{
+  "name": "itsm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ระบบแจ้งปัญหาทางเทคโนโลยีสารสนเทศและบริหารจัดการตั๋วงาน (IT Service Desk)",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "seed": "npm --prefix server run seed",
+    "clear:tickets": "npm --prefix server run clear:tickets",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev:demo": "npm --prefix server run dev:memory",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server run start",
+    "start:prod": "npm run build && NODE_ENV=production npm --prefix server run start",
+    "test": "npm --prefix server run test:e2e && npm --prefix server run test:socket"
+  },
+  "engines": {
+    "node": ">=18.13.0"
+  }
+}
