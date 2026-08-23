@@ -27,15 +27,34 @@ if (process.env.NODE_ENV !== 'test') app.use(morgan(process.env.NODE_ENV === 'pr
 ensureUploadDir();
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-app.get('/api/health', (req, res) =>
+// healthcheck — ตอบ 200 เมื่อโปรเซสทำงานอยู่ พร้อมบอกสถานะฐานข้อมูล
+// (ถ้าให้ตอบ 503 ตอนต่อฐานข้อมูลไม่ได้ PaaS จะรีสตาร์ตวนไปเรื่อย ๆ จนไม่มีใครเห็นสาเหตุ)
+app.get('/api/health', (req, res) => {
+  const mongoose = require('mongoose');
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  const dbState = states[mongoose.connection.readyState] || 'unknown';
+
   res.json({
     ok: true,
     service: 'itsm-api',
     time: new Date(),
+    db: dbState,
+    dbError: dbState === 'connected' ? null : req.app.get('dbError') || null,
     // จำนวน socket ที่เชื่อมต่ออยู่ — ใช้ตรวจว่าแชทเรียลไทม์ทำงานอยู่จริง
     sockets: req.app.get('io')?.engine?.clientsCount ?? 0
-  })
-);
+  });
+});
+
+// กันไม่ให้คำขอค้างเมื่อฐานข้อมูลยังไม่พร้อม — ตอบ 503 พร้อมสาเหตุแทน
+app.use('/api', (req, res, next) => {
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) return next();
+  res.status(503).json({
+    message: 'ระบบยังเชื่อมต่อฐานข้อมูลไม่ได้ กรุณาลองใหม่อีกครั้ง',
+    detail: req.app.get('dbError') || 'กำลังเชื่อมต่อ'
+  });
+});
+
 app.use('/api', routes);
 
 /* ------------------------------------------------------------------
