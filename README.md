@@ -251,9 +251,13 @@ git init && git add -A && git commit -m "ระบบแจ้งปัญหา
 
 **3. เพิ่ม MongoDB**
 
-- ในหน้า project กด **New → Database → Add MongoDB**
+- ในหน้า **Project Canvas** กดปุ่ม **+ New** (หรือกด `⌘K` / `Ctrl+K`) แล้วพิมพ์ค้นหา **MongoDB**
+- เลือก MongoDB จากรายการ (เป็น template ที่ Railway เตรียมไว้ ใช้ official mongo image)
 - ไปที่ service ของเว็บ → แท็บ **Variables** → **Add Variable Reference** → เลือก `MONGO_URL` จาก MongoDB service
-- ระบบอ่าน `MONGO_URL` ได้เลย และเติมชื่อฐานข้อมูล `/itsm` ให้อัตโนมัติ
+
+> MongoDB ของ Railway เปิดใช้รหัสผ่าน และผู้ใช้ root อยู่ในฐานข้อมูล `admin`
+> ระบบจึงเติมทั้งชื่อฐานข้อมูล `/itsm` และ `authSource=admin` ให้อัตโนมัติ
+> ถ้าไม่เติม `authSource` จะขึ้น `Authentication failed`
 
 **4. ตั้งตัวแปรที่เหลือ** (แท็บ Variables ของ service เว็บ)
 
