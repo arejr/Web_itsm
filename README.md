@@ -244,6 +244,11 @@ git init && git add -A && git commit -m "ระบบแจ้งปัญหา
 - [railway.app](https://railway.app) → **New Project → Deploy from GitHub repo** → เลือก repo นี้
 - Railway จะอ่าน `railway.json` แล้ว build ด้วย `Dockerfile` ให้เอง
 
+> **ถ้า build ล้มเหลวภายในไม่กี่วินาที** พร้อมข้อความ `Failed to build an image`
+> แปลว่า Railway ไม่ได้ใช้ `Dockerfile` แต่ไป auto-detect เอง
+> แก้โดยไปที่ service → **Settings → Build → Builder** แล้วเลือก **Dockerfile** จากนั้นกด Redeploy
+> (โปรเจกต์นี้ build ผ่านได้ทั้งสองทางอยู่แล้ว แต่ทาง Dockerfile เร็วกว่าและตรงกับที่ทดสอบไว้)
+
 **3. เพิ่ม MongoDB**
 
 - ในหน้า project กด **New → Database → Add MongoDB**

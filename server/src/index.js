@@ -14,8 +14,13 @@ function checkProductionConfig() {
     console.error('[fatal] ต้องตั้งค่า JWT_SECRET ให้เป็นค่าลับของตัวเองก่อนใช้งานจริง');
     process.exit(1);
   }
-  if (!process.env.CLIENT_ORIGIN) {
-    console.warn('[warn] ยังไม่ได้ตั้ง CLIENT_ORIGIN — ระบบจะอนุญาตเฉพาะ localhost:5173 เท่านั้น');
+  const { platformOrigins } = require('./config/origins');
+  const auto = platformOrigins();
+  if (!process.env.CLIENT_ORIGIN && !auto.length) {
+    console.warn('[warn] ไม่พบทั้ง CLIENT_ORIGIN และโดเมนที่ host ตั้งให้');
+    console.warn('[warn] คำขอจากโดเมนเดียวกับที่เสิร์ฟหน้าเว็บยังใช้ได้ แต่ถ้าแยก host กันต้องตั้ง CLIENT_ORIGIN');
+  } else if (auto.length) {
+    console.log(`[web] โดเมนที่อนุญาตอัตโนมัติ: ${auto.join(', ')}`);
   }
 }
 
