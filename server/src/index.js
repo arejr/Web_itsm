@@ -9,29 +9,42 @@ const { platformOrigins } = require('./config/origins');
 
 const PORT = process.env.PORT || 4000;
 
+/**
+ * ตรวจการตั้งค่าที่จำเป็น — คืนรายการปัญหาที่พบ ไม่สั่งปิดโปรเซส
+ *
+ * ห้าม process.exit() ตรงนี้เด็ดขาด เพราะถ้าโปรเซสตายก่อนเปิดพอร์ต
+ * PaaS จะขึ้นแค่ "Healthcheck failure / Service offline" โดยไม่มีทางรู้ว่าขาดค่าไหน
+ * จึงต้องเปิดเซิร์ฟเวอร์ให้ได้ก่อน แล้วรายงานปัญหาผ่าน /api/health แทน
+ */
 function checkProductionConfig() {
-  if (process.env.NODE_ENV !== 'production') return;
+  const problems = [];
+  if (process.env.NODE_ENV !== 'production') return problems;
 
-  const weak = !process.env.JWT_SECRET || process.env.JWT_SECRET.includes('change-this');
-  if (weak) {
-    console.error('[fatal] ต้องตั้งค่า JWT_SECRET ให้เป็นค่าลับของตัวเองก่อนใช้งานจริง');
-    console.error('[fatal] สร้างด้วย: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"');
-    process.exit(1);
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('change-this')) {
+    problems.push({
+      key: 'JWT_SECRET',
+      message: 'ยังไม่ได้ตั้ง JWT_SECRET (หรือยังเป็นค่าเริ่มต้น)',
+      fix: 'สร้างค่าสุ่มด้วย: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))" แล้วนำไปใส่ใน Variables'
+    });
   }
 
   if (!process.env.MONGODB_URI && !process.env.MONGO_URL) {
-    console.error('[fatal] ไม่พบทั้ง MONGODB_URI และ MONGO_URL — ระบบไม่รู้ว่าจะต่อฐานข้อมูลที่ไหน');
-    console.error('[fatal] Railway: ผูก MongoDB service เข้ากับ project แล้วเพิ่ม Variable Reference ชื่อ MONGO_URL');
-    process.exit(1);
+    problems.push({
+      key: 'MONGO_URL',
+      message: 'ไม่พบทั้ง MONGODB_URI และ MONGO_URL — ระบบไม่รู้ว่าจะต่อฐานข้อมูลที่ไหน',
+      fix: 'Railway: เพิ่ม MongoDB ด้วยปุ่ม + New บน Canvas แล้วที่ service เว็บไปที่ Variables → Add Variable Reference → เลือก MONGO_URL'
+    });
   }
 
   const auto = platformOrigins();
-  if (!process.env.CLIENT_ORIGIN && !auto.length) {
+  if (auto.length) {
+    console.log(`[web] โดเมนที่อนุญาตอัตโนมัติ: ${auto.join(', ')}`);
+  } else if (!process.env.CLIENT_ORIGIN) {
     console.warn('[warn] ไม่พบทั้ง CLIENT_ORIGIN และโดเมนที่ host ตั้งให้');
     console.warn('[warn] คำขอจากโดเมนเดียวกับที่เสิร์ฟหน้าเว็บยังใช้ได้ แต่ถ้าแยก host กันต้องตั้ง CLIENT_ORIGIN');
-  } else if (auto.length) {
-    console.log(`[web] โดเมนที่อนุญาตอัตโนมัติ: ${auto.join(', ')}`);
   }
+
+  return problems;
 }
 
 // ใส่ข้อมูลตั้งต้นให้ครั้งเดียวตอนฐานข้อมูลยังว่าง (Railway/Render แพ็กเกจฟรีไม่มี shell ให้รัน seed เอง)
@@ -77,15 +90,28 @@ async function connectWithRetry(io) {
 }
 
 async function main() {
-  checkProductionConfig();
+  const problems = checkProductionConfig();
+  app.set('configErrors', problems);
 
   const server = http.createServer(app);
   const io = initSockets(server);
   app.set('io', io);
 
-  // เปิดเซิร์ฟเวอร์ก่อน เพื่อให้ /api/health ตอบได้และบอกสถานะฐานข้อมูลได้ทันที
+  // เปิดเซิร์ฟเวอร์ก่อนเสมอ เพื่อให้ /api/health ตอบได้และบอกสาเหตุได้ทันที
   await new Promise((resolve) => server.listen(PORT, resolve));
   console.log(`[api] listening on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+
+  if (problems.length) {
+    console.error('┌─────────────────────────────────────────────────────────────');
+    console.error('│ ตั้งค่าไม่ครบ — เว็บจะเปิดได้แต่ยังใช้งานไม่ได้จนกว่าจะแก้');
+    problems.forEach((p, i) => {
+      console.error(`│ ${i + 1}. [${p.key}] ${p.message}`);
+      console.error(`│    วิธีแก้: ${p.fix}`);
+    });
+    console.error('│ ดูสถานะล่าสุดได้ที่ /api/health');
+    console.error('└─────────────────────────────────────────────────────────────');
+    return; // ไม่ต่อฐานข้อมูล แต่ยังเปิดพอร์ตค้างไว้ให้ตรวจสอบได้
+  }
 
   await connectWithRetry(io);
 }
