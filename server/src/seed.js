@@ -98,35 +98,13 @@ async function seedDatabase() {
   console.log('[seed] ตั๋วงาน 0 รายการ (เริ่มต้นด้วยคิวงานว่าง)');
 
 
-  /* ---------- ฐานความรู้ ---------- */
-  const kb = [
-    { cat: 'hardware', title: 'เครื่องเปิดไม่ติดหลังไฟดับ', author: by.IT001, uses: 12,
-      summary: 'ตรวจสอบ power supply, ถอดสายไฟค้าง 30 วินาที, ทดสอบด้วยสายไฟสำรอง หากไฟ PSU ไม่ขึ้นให้เปลี่ยนชุดจ่ายไฟ' },
-    { cat: 'software', title: 'HR Portal ขึ้น error 403 หลังย้ายแผนก', author: by.IT002, uses: 8,
-      summary: 'สิทธิ์ผูกกับ OU เดิม ต้องรัน sync กลุ่มใหม่ใน AD แล้วให้ผู้ใช้ล็อกเอาต์–ล็อกอินใหม่' },
-    { cat: 'network', title: 'Wi-Fi หลุดเป็นช่วง ๆ เฉพาะบางชั้น', author: by.IT003, uses: 15,
-      summary: 'ตรวจ AP ที่โหลดเกิน 40 client, ปรับ channel ที่ทับซ้อน และรีสตาร์ต AP นอกเวลาทำการ' },
-    { cat: 'account', title: 'ขั้นตอนขอสิทธิ์โฟลเดอร์ร่วม', author: by.HD001, uses: 21,
-      summary: 'ต้องมีอนุมัติจากหัวหน้าฝ่ายเจ้าของข้อมูลก่อน จากนั้นเพิ่มผู้ใช้เข้ากลุ่ม security group ที่กำหนด' },
-    { cat: 'hardware', title: 'เครื่องพิมพ์กระดาษติดถาด 2', author: by.IT001, uses: 19,
-      summary: 'เปิดฝาหลัง ดึงกระดาษตามแนวป้อน ทำความสะอาดลูกยาง และตรวจว่ากระดาษไม่ชื้น' },
-    { cat: 'software', title: 'Outlook ค้างที่หน้า loading profile', author: by.IT002, uses: 26,
-      summary: 'ลบ OST cache แล้วสร้าง profile ใหม่ พร้อมตรวจว่าเวอร์ชันอัปเดตล่าสุด' },
-    { cat: 'network', title: 'VPN error 809 เชื่อมต่อจากภายนอกไม่ได้', author: by.IT003, uses: 9,
-      summary: 'เปิดพอร์ต UDP 500/4500 ที่เราเตอร์บ้าน หรือเปลี่ยนไปใช้โปรโตคอล SSTP หากผู้ให้บริการบล็อก IPsec' },
-    { cat: 'account', title: 'รีเซ็ตรหัสผ่านผู้ใช้งานผ่าน AD', author: by.HD001, uses: 34,
-      summary: 'ยืนยันตัวตนด้วยบัตรพนักงาน รีเซ็ตผ่าน AD และตั้งค่าให้บังคับเปลี่ยนรหัสผ่านเมื่อเข้าใช้งานครั้งแรก' }
-  ];
-  for (let i = 0; i < kb.length; i += 1) {
-    const k = kb[i];
-    const seq = await Counter.next('kb');
-    await Article.create({
-      ref: `KB-${String(seq).padStart(4, '0')}`,
-      title: k.title, summary: k.summary, body: k.summary,
-      category: cat[k.cat]._id, author: k.author._id, authorName: k.author.name, uses: k.uses
-    });
-  }
-  console.log(`[seed] บทความฐานความรู้ ${kb.length} รายการ`);
+  /* ---------- ฐานความรู้ ----------
+     เริ่มต้นด้วยฐานความรู้ว่าง — บทความจะถูกสร้างจากการใช้งานจริง
+     โดยติ๊ก "เผยแพร่เข้าฐานความรู้ (KB)" ตอนบันทึก Resolution Note ปิดตั๋วงาน
+     หรือกดปุ่ม "+ เพิ่มบทความ" ในหน้าฐานความรู้
+  */
+  console.log('[seed] บทความฐานความรู้ 0 รายการ (เริ่มต้นด้วยฐานความรู้ว่าง)');
+
 
   /* ---------- การแจ้งเตือน ----------
      เหลือเฉพาะประกาศของระบบ — การแจ้งเตือนที่ผูกกับตั๋วงานจะเกิดขึ้นเองตอนใช้งานจริง

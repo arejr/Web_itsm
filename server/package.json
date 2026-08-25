@@ -11,7 +11,9 @@
     "dev:memory": "node src/devServer.js",
     "test:e2e": "node test/e2e.js",
     "test:socket": "node test/socket.js",
-    "clear:tickets": "node src/clearTickets.js"
+    "clear:tickets": "node src/clearTickets.js",
+    "clear:kb": "node src/clearTickets.js kb",
+    "clear:all": "node src/clearTickets.js all"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -9,6 +9,8 @@
     "db:down": "docker compose down",
     "seed": "npm --prefix server run seed",
     "clear:tickets": "npm --prefix server run clear:tickets",
+    "clear:kb": "npm --prefix server run clear:kb",
+    "clear:all": "npm --prefix server run clear:all",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "dev:demo": "npm --prefix server run dev:memory",

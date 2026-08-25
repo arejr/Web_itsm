@@ -1,9 +1,10 @@
 /**
- * ล้างตั๋วงานทั้งหมดออกจากฐานข้อมูล
- *   npm run clear:tickets
+ * ล้างข้อมูลการใช้งานออกจากฐานข้อมูล
+ *   npm run clear:tickets   ล้างตั๋วงาน (พร้อมแชทและการแจ้งเตือนที่ผูกอยู่)
+ *   npm run clear:kb        ล้างบทความฐานความรู้
+ *   npm run clear:all       ล้างทั้งสองอย่าง
  *
- * ลบ: ตั๋วงาน · ข้อความแชทในตั๋ว · การแจ้งเตือนที่ผูกกับตั๋ว · ตัวนับเลขตั๋ว
- * เก็บไว้: ผู้ใช้งาน · หมวดหมู่ · ประกาศ · กฎอัตโนมัติ · ฐานความรู้
+ * เก็บไว้เสมอ: ผู้ใช้งาน · หมวดหมู่ · ประกาศ
  */
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -34,14 +35,35 @@ async function clearTickets() {
   console.log(`[clear] ลบข้อความแชท ${messages.deletedCount} รายการ`);
   console.log(`[clear] ลบการแจ้งเตือนที่ผูกกับตั๋ว ${notifs.deletedCount} รายการ`);
   console.log('[clear] รีเซ็ตตัวนับเลขตั๋ว — ตั๋วใบถัดไปจะเริ่มที่ 000001');
-  console.log('[clear] คงไว้: ผู้ใช้งาน · หมวดหมู่ · ประกาศ · กฎอัตโนมัติ · ฐานความรู้');
+  console.log('[clear] คงไว้: ผู้ใช้งาน · หมวดหมู่ · ประกาศ · ฐานความรู้');
 }
 
-module.exports = { clearTickets };
+async function clearArticles() {
+  const before = await Article.countDocuments();
+  const res = await Article.deleteMany({});
+
+  // ตัดสถานะ "เผยแพร่เข้า KB แล้ว" ออกจากตั๋วงาน เพื่อไม่ให้ชี้ไปยังบทความที่ถูกลบ
+  await Ticket.updateMany({ publishedToKb: true }, { $set: { publishedToKb: false } });
+
+  // รีเซ็ตตัวนับ เพื่อให้เลขบทความเริ่มนับใหม่จาก KB-0001
+  await Counter.deleteMany({ _id: 'kb' });
+
+  console.log(`[clear] ลบบทความฐานความรู้ ${res.deletedCount} รายการ (เดิมมี ${before})`);
+  console.log('[clear] รีเซ็ตตัวนับ — บทความถัดไปจะเริ่มที่ KB-0001');
+  console.log('[clear] คงไว้: ตั๋วงาน · ผู้ใช้งาน · หมวดหมู่ · ประกาศ');
+}
+
+module.exports = { clearTickets, clearArticles };
 
 if (require.main === module) {
+  const what = process.argv[2] || 'tickets'; // tickets | kb | all
+  const run = async () => {
+    if (what === 'tickets' || what === 'all') await clearTickets();
+    if (what === 'kb' || what === 'all') await clearArticles();
+  };
+
   connectDB()
-    .then(clearTickets)
+    .then(run)
     .then(() => mongoose.disconnect())
     .then(() => console.log('\n[clear] เสร็จสิ้น'))
     .catch((err) => {
