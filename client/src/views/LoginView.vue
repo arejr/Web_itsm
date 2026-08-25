@@ -72,10 +72,7 @@ async function submit() {
       <div class="login-brand">
         <div class="d-flex align-items-center gap-3">
           <div class="login-mark mono">IT</div>
-          <div class="d-flex flex-column">
-            <span class="login-brand__name">IT Service Desk</span>
-            <span class="login-brand__sub mono">Incident &amp; Ticket Management</span>
-          </div>
+          <span class="login-brand__name">IT Helpdesk and Incident Ticket Management System</span>
         </div>
 
         <div class="login-brand__body">
@@ -207,8 +204,7 @@ async function submit() {
   display: flex; align-items: center; justify-content: center;
   font: 600 15px var(--font-mono); color: #dbe7f0; letter-spacing: 0.5px;
 }
-.login-brand__name { font: 600 16px var(--font-th); color: #fff; letter-spacing: 0.2px; }
-.login-brand__sub { font: 400 11px var(--font-mono); color: var(--sidebar-muted); }
+.login-brand__name { font: 600 16px/1.45 var(--font-th); color: #fff; letter-spacing: 0.2px; max-width: 280px; }
 .login-brand__body { margin-top: auto; padding-top: 44px; display: flex; flex-direction: column; gap: 18px; max-width: 430px; }
 .login-brand__headline { font: 600 26px/1.4 var(--font-th); color: #fff; letter-spacing: -0.4px; margin: 0; }
 .login-brand__text { font: 400 13.5px/1.9 var(--font-th); color: #8fa0af; margin: 0; }
