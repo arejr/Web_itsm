@@ -121,12 +121,6 @@ watch(
             คุณกำลังเข้าใช้งานในชื่อ <strong>{{ auth.user?.name }}</strong> ({{ auth.roleLabel }}) —
             งานที่ยังไม่บันทึกในแบบฟอร์มจะหายไป
           </p>
-          <div class="logout-session">
-            <span class="meta-label">เซสชันปัจจุบัน</span>
-            <span class="mono" style="font-size: 12px; color: var(--ink-3)">
-              เข้าสู่ระบบล่าสุด {{ auth.user?.lastLoginAt ? new Date(auth.user.lastLoginAt).toLocaleString('th-TH') : '—' }}
-            </span>
-          </div>
           <div class="d-flex gap-2">
             <button class="btn-ghost flex-fill py-3" type="button" @click="logoutState = null">กลับไปทำงานต่อ</button>
             <button class="btn-slate flex-fill py-3" type="button" @click="confirmLogout">ออกจากระบบ</button>
@@ -135,13 +129,6 @@ watch(
 
         <template v-else>
           <h2 class="logout-title">ออกจากระบบเรียบร้อยแล้ว</h2>
-          <p class="logout-text">
-            ระบบได้ปิดเซสชันของคุณแล้ว เพื่อความปลอดภัยกรุณาปิดหน้าต่างเบราว์เซอร์หากใช้เครื่องคอมพิวเตอร์ส่วนกลาง
-          </p>
-          <div class="logout-ok">
-            <span class="dot" style="background: var(--ok)"></span>
-            <span>ตั๋วงานที่เปิดค้างไว้ยังคงถูกติดตามตาม SLA ตามปกติ</span>
-          </div>
           <button class="btn-brand w-100 py-3" type="button" @click="backToLogin">เข้าสู่ระบบอีกครั้ง</button>
         </template>
       </div>
@@ -229,17 +216,6 @@ watch(
 }
 .logout-title { font: 600 19px var(--font-th); letter-spacing: -0.2px; margin: 0; }
 .logout-text { font: 400 12.5px/1.85 var(--font-th); color: var(--muted); margin: 0; }
-.logout-session {
-  padding: 12px 13px; border-radius: 9px;
-  background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07);
-  display: flex; flex-direction: column; gap: 4px;
-}
-.logout-ok {
-  display: flex; align-items: center; gap: 9px;
-  padding: 11px 13px; border-radius: 9px;
-  background: var(--ok-soft); border: 1px solid #d6e6bd;
-  font: 400 12px var(--font-th); color: var(--ok-ink);
-}
 
 @media (min-width: 1200px) {
   .shell__content { padding: 22px 28px 44px; gap: 18px; }

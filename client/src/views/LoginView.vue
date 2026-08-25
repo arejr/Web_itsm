@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { HOME_BY_ROLE } from '@/router';
@@ -16,17 +16,38 @@ const error = ref('');
 
 // บัญชีตัวอย่างสำหรับทดสอบระบบ (ตรงกับข้อมูลใน seed)
 const demoAccounts = [
-  { role: 'ผู้ดูแลระบบ', email: 'waraporn.c@company.co.th' },
-  { role: 'IT Helpdesk', email: 'pimchanok.d@company.co.th' },
-  { role: 'เจ้าหน้าที่ IT', email: 'thanawat.s@company.co.th' },
-  { role: 'พนักงานบริษัท', email: 'asniya.n@company.co.th' }
+  { role: 'ผู้ดูแลระบบ', sub: 'จัดการผู้ใช้ ตั้งค่าระบบ ดูภาพรวม', email: 'waraporn.c@company.co.th' },
+  { role: 'IT Helpdesk', sub: 'คัดกรองและมอบหมายตั๋วงาน', email: 'pimchanok.d@company.co.th' },
+  { role: 'เจ้าหน้าที่ IT', sub: 'รับงานและแก้ไขปัญหา', email: 'thanawat.s@company.co.th' },
+  { role: 'พนักงานบริษัท', sub: 'แจ้งปัญหาและติดตามสถานะ', email: 'asniya.n@company.co.th' }
 ];
 
-function fill(email) {
-  username.value = email;
+const demoOpen = ref(false);
+const demoRef = ref(null);
+
+function fill(account) {
+  username.value = account.email;
   password.value = 'Password123!';
   error.value = '';
+  demoOpen.value = false;
 }
+
+// ปิดเมนูเมื่อคลิกนอกพื้นที่ หรือกด Esc
+function onDocDown(e) {
+  if (!demoOpen.value) return;
+  if (demoRef.value && !demoRef.value.contains(e.target)) demoOpen.value = false;
+}
+function onKey(e) {
+  if (e.key === 'Escape') demoOpen.value = false;
+}
+onMounted(() => {
+  document.addEventListener('mousedown', onDocDown, true);
+  document.addEventListener('keydown', onKey);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', onDocDown, true);
+  document.removeEventListener('keydown', onKey);
+});
 
 async function submit() {
   error.value = '';
@@ -121,17 +142,41 @@ async function submit() {
             {{ auth.loading ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบ' }}
           </button>
 
-          <div class="demo-box">
-            <div class="demo-box__label mono">DEMO ACCOUNTS · รหัสผ่าน Password123!</div>
-            <div class="demo-box__grid">
-              <button v-for="a in demoAccounts" :key="a.email" type="button" class="chip" @click="fill(a.email)">
-                {{ a.role }}
+          <div ref="demoRef" class="demo">
+            <button
+              type="button"
+              class="demo__trigger"
+              :class="{ 'is-open': demoOpen }"
+              :aria-expanded="demoOpen"
+              aria-controls="demo-account-list"
+              @click="demoOpen = !demoOpen"
+            >
+              <span class="demo__trigger-label">เลือกบัญชีสำหรับทดสอบ</span>
+              <span class="demo__chevron" aria-hidden="true"></span>
+            </button>
+
+            <div v-if="demoOpen" id="demo-account-list" class="demo__menu" role="listbox">
+              <div class="demo__menu-head mono">รหัสผ่านเดียวกันทุกบัญชี · Password123!</div>
+              <button
+                v-for="a in demoAccounts"
+                :key="a.email"
+                type="button"
+                class="demo__item"
+                role="option"
+                :aria-selected="username === a.email"
+                @click="fill(a)"
+              >
+                <span class="demo__item-main">
+                  <span class="demo__item-role">{{ a.role }}</span>
+                  <span class="demo__item-sub">{{ a.sub }}</span>
+                </span>
+                <span class="mono demo__item-email">{{ a.email }}</span>
               </button>
             </div>
           </div>
 
           <p class="login-help">
-            หากเข้าใช้งานไม่ได้ ติดต่อศูนย์บริการ IT ต่อ 1150 หรืออีเมล servicedesk@company.co.th
+            หากเข้าใช้งานไม่ได้ ติดต่อศูนย์บริการ IT ที่เบอร์ 0000 หรืออีเมล @mail.com
           </p>
         </form>
       </div>
@@ -196,14 +241,81 @@ async function submit() {
 }
 .remember input { accent-color: var(--brand); width: 14px; height: 14px; }
 
-.demo-box {
-  padding: 12px; border-radius: var(--radius);
-  background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07);
-  display: flex; flex-direction: column; gap: 8px;
+.demo { position: relative; }
+
+.demo__trigger {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(16, 24, 32, 0.22);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font: 500 12px var(--font-th);
+  cursor: pointer;
 }
-.demo-box__label { font: 500 9.5px var(--font-mono); color: var(--muted-3); letter-spacing: 0.8px; }
-.demo-box__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.demo-box__grid .chip { width: 100%; }
+.demo__trigger:hover { background: var(--surface-3); }
+.demo__trigger.is-open { border-style: solid; border-color: var(--brand); background: var(--brand-tint); color: var(--brand-ink); }
+.demo__trigger-label { flex: 1; text-align: left; }
+
+.demo__chevron {
+  width: 7px; height: 7px; flex: none;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 0.18s ease;
+}
+.demo__trigger.is-open .demo__chevron { transform: rotate(-135deg) translate(-2px, -2px); }
+
+.demo__menu {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 6px);
+  z-index: 20;
+  background: #fff;
+  border: 1px solid rgba(16, 24, 32, 0.12);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 14px 36px rgba(16, 24, 32, 0.18);
+  overflow: hidden auto;
+  /* กันกรณีจอเตี้ยมาก เช่นมือถือแนวนอน ไม่ให้เมนูล้นออกนอกการ์ดที่ตั้ง overflow:hidden ไว้ */
+  max-height: min(288px, 46vh);
+  overscroll-behavior: contain;
+  animation: demo-in 0.14s ease;
+}
+@keyframes demo-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.demo__menu-head {
+  position: sticky; top: 0; z-index: 1;
+  padding: 9px 12px;
+  font: 500 9.5px var(--font-mono);
+  color: var(--muted-3);
+  letter-spacing: 0.6px;
+  background: var(--surface-2);
+  border-bottom: 1px solid rgba(16, 24, 32, 0.07);
+}
+
+.demo__item {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border: 0; border-bottom: 1px solid rgba(16, 24, 32, 0.06);
+  background: #fff; cursor: pointer; text-align: left;
+}
+.demo__item:last-child { border-bottom: 0; }
+.demo__item:hover { background: var(--brand-tint); }
+.demo__item[aria-selected='true'] { background: var(--brand-tint); }
+.demo__item-main { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.demo__item-role { font: 500 12.5px var(--font-th); color: var(--ink); }
+.demo__item-sub { font: 400 10.5px var(--font-th); color: var(--muted-2); }
+.demo__item-email {
+  font-size: 10px; color: var(--muted-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42%;
+}
+
+@media (max-width: 400px) {
+  .demo__item-email { display: none; }
+}
 
 .login-help { font: 400 11.5px/1.8 var(--font-th); color: var(--muted-3); text-align: center; margin: 0; }
 

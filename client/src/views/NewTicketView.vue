@@ -173,7 +173,7 @@ async function submit() {
       <div class="urgent-card">
         <div class="urgent-card__title">ต้องการด่วนตอนนี้?</div>
         <p class="urgent-card__text mb-0">
-          กรณีระบบหลักล่มหรือกระทบผู้ใช้จำนวนมาก โทรสายด่วน IT ต่อ 1150 แล้วค่อยแจ้งตั๋วตามหลัง
+          กรณีระบบหลักล่มหรือกระทบผู้ใช้จำนวนมาก โทรสายด่วน IT ต่อ 0000
         </p>
       </div>
     </div>
