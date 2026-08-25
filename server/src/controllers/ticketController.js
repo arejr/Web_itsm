@@ -8,7 +8,6 @@ const Counter = require('../models/Counter');
 const { nextTicketCode } = require('../utils/ticketCode');
 const { serializeTicket } = require('../utils/serialize');
 const { notify } = require('../utils/notify');
-const { applyAssignRules } = require('../utils/rules');
 const { PRIORITY_SLA_MINUTES, PRIORITY_LABEL, STATUSES } = require('../config/constants');
 
 const POPULATE = [
@@ -149,15 +148,10 @@ exports.create = async (req, res, next) => {
 
     pushTimeline(ticket, 'ผู้ใช้แจ้งปัญหาเข้าระบบ', { name: ticket.requesterName }, 'info');
 
-    // Helpdesk ระบุผู้รับผิดชอบมาพร้อมกัน → มอบหมายทันที
+    // มอบหมายทันทีเฉพาะกรณีที่ผู้ออกตั๋วระบุผู้รับผิดชอบมาพร้อมกัน
+    // นอกนั้นตั๋วจะเข้าคิวคัดกรองให้ Helpdesk มอบหมายเอง
     let assignedUser = null;
-    if (assigneeId) {
-      assignedUser = await User.findById(assigneeId);
-    } else if (!ticket.isDraft) {
-      const auto = await applyAssignRules(ticket, category);
-      if (auto?.assignee) assignedUser = await User.findById(auto.assignee);
-      if (auto && !assignedUser && auto.group) ticket.group = auto.group;
-    }
+    if (assigneeId) assignedUser = await User.findById(assigneeId);
 
     if (assignedUser) {
       ticket.assignee = assignedUser._id;

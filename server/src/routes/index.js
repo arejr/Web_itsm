@@ -10,7 +10,6 @@ const categories = require('../controllers/categoryController');
 const announcements = require('../controllers/announcementController');
 const articles = require('../controllers/articleController');
 const notifications = require('../controllers/notificationController');
-const rules = require('../controllers/ruleController');
 const stats = require('../controllers/statsController');
 
 const router = express.Router();
@@ -67,12 +66,6 @@ router.delete('/articles/:id', requireAuth, requireRole('admin'), articles.remov
 router.get('/notifications', requireAuth, notifications.list);
 router.patch('/notifications/read-all', requireAuth, notifications.markAllRead);
 router.patch('/notifications/:id/read', requireAuth, notifications.markRead);
-
-/* ---------- กฎมอบหมายอัตโนมัติ / Escalation ---------- */
-router.get('/rules', requireAuth, requireRole('admin', 'helpdesk'), rules.list);
-router.post('/rules', requireAuth, requireRole('admin'), rules.create);
-router.patch('/rules/:id', requireAuth, requireRole('admin'), rules.update);
-router.delete('/rules/:id', requireAuth, requireRole('admin'), rules.remove);
 
 /* ---------- สถิติ ---------- */
 router.get('/stats/dashboard', requireAuth, stats.dashboard);

@@ -8,7 +8,6 @@ import { PRIORITY } from '@/services/lookups';
 const meta = useMetaStore();
 const ui = useUiStore();
 
-const rules = ref([]);
 const announcements = ref([]);
 const editingCat = ref(null);
 const catForm = ref({ label: '', description: '', color: '#14776b', slaHours: 24, defaultGroup: '' });
@@ -26,12 +25,8 @@ const prioRules = [
 
 async function loadAll() {
   await meta.load(true);
-  const [r, a] = await Promise.all([
-    api.get('/rules').catch(() => ({ data: [] })),
-    api.get('/announcements').catch(() => ({ data: [] }))
-  ]);
-  rules.value = r.data;
-  announcements.value = a.data;
+  const { data } = await api.get('/announcements').catch(() => ({ data: [] }));
+  announcements.value = data;
 }
 onMounted(loadAll);
 
@@ -66,17 +61,6 @@ async function removeCat(c) {
     await api.delete(`/categories/${c._id}`);
     await meta.load(true);
     ui.success('ลบหมวดหมู่เรียบร้อยแล้ว');
-  } catch (err) {
-    ui.error(errMsg(err));
-  }
-}
-
-/* ---------- กฎอัตโนมัติ ---------- */
-async function toggleRule(r) {
-  try {
-    const { data } = await api.patch(`/rules/${r._id}`, { enabled: !r.enabled });
-    const i = rules.value.findIndex((x) => x._id === data._id);
-    if (i >= 0) rules.value.splice(i, 1, { ...r, ...data });
   } catch (err) {
     ui.error(errMsg(err));
   }
@@ -175,31 +159,6 @@ async function removeAnn(a) {
         </div>
       </div>
 
-      <!-- กฎอัตโนมัติ -->
-      <div class="card-surface p-3 d-flex flex-column gap-2">
-        <div class="d-flex align-items-baseline gap-2 mb-1">
-          <div class="card-title-sm">กฎมอบหมายอัตโนมัติ &amp; Escalation</div>
-          <span class="text-muted-3" style="font-size: 11px">ทำงานตามลำดับจากบนลงล่าง</span>
-        </div>
-
-        <div v-for="r in rules" :key="r._id" class="rule-row" :class="{ 'is-off': !r.enabled }">
-          <span
-            class="pill pill--mono"
-            :style="r.kind === 'ESCALATE' ? { background: '#fdecec', color: '#a12626' } : { background: '#e4f1ee', color: '#0f6a5f' }"
-          >
-            {{ r.kind }}
-          </span>
-          <div class="d-flex flex-column flex-fill min-w-0">
-            <span class="rule-row__when">{{ r.when }}</span>
-            <span class="rule-row__then">→ {{ r.then }}</span>
-          </div>
-          <span class="mono rule-row__hits">ทำงาน {{ r.hits }} ครั้ง</span>
-          <button class="switch" :class="{ 'is-on': r.enabled }" type="button" :aria-pressed="r.enabled" @click="toggleRule(r)">
-            <span></span>
-          </button>
-        </div>
-      </div>
-
       <!-- ประกาศ -->
       <div class="card-surface p-3 d-flex flex-column gap-2">
         <div class="d-flex align-items-center gap-2 mb-1">
@@ -255,13 +214,6 @@ async function removeAnn(a) {
 .prio-row__label { font: 600 12px var(--font-mono); }
 .prio-row__desc { font: 400 12px var(--font-th); color: var(--ink-3); }
 .prio-row__sla { justify-self: end; font: 500 11.5px var(--font-mono); }
-
-.rule-row { display: flex; align-items: center; gap: 11px; padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; flex-wrap: wrap; }
-.rule-row.is-off { background: #fafbfc; }
-.rule-row.is-off .rule-row__when { color: var(--muted-3); }
-.rule-row__when { font: 500 12.5px var(--font-th); color: var(--ink-strong); }
-.rule-row__then { font: 400 11px var(--font-th); color: var(--muted-2); }
-.rule-row__hits { font: 400 10.5px var(--font-mono); color: var(--muted-3); }
 
 .ann-row { padding: 12px 13px; border: 1px solid var(--line); border-radius: 9px; display: flex; flex-direction: column; gap: 5px; }
 .ann-row__title { font: 500 12.5px var(--font-th); }

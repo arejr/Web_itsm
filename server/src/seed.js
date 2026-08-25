@@ -9,7 +9,6 @@ const Ticket = require('./models/Ticket');
 const Message = require('./models/Message');
 const Article = require('./models/Article');
 const Announcement = require('./models/Announcement');
-const Rule = require('./models/Rule');
 const Notification = require('./models/Notification');
 const Counter = require('./models/Counter');
 
@@ -23,7 +22,7 @@ async function seedDatabase() {
   await Promise.all([
     User.deleteMany({}), Category.deleteMany({}), Ticket.deleteMany({}),
     Message.deleteMany({}), Article.deleteMany({}), Announcement.deleteMany({}),
-    Rule.deleteMany({}), Notification.deleteMany({}), Counter.deleteMany({})
+    Notification.deleteMany({}), Counter.deleteMany({})
   ]);
 
   /* ---------- หมวดหมู่ปัญหา ---------- */
@@ -79,22 +78,6 @@ async function seedDatabase() {
   }
   const by = Object.fromEntries(users.map((u) => [u.employeeId, u]));
   console.log(`[seed] ผู้ใช้งาน ${users.length} คน (รหัสผ่านเริ่มต้น: ${DEFAULT_PASSWORD})`);
-
-  /* ---------- กฎมอบหมายอัตโนมัติ / Escalation ---------- */
-  await Rule.create([
-    { kind: 'ASSIGN', order: 0, when: 'หมวดหมู่ = Network', then: 'มอบหมายให้ ศิริพร มณีรัตน์ (Network Team) อัตโนมัติ',
-      matchCategoryKey: 'network', assignTo: by.IT003._id, assignGroup: 'Infrastructure', hits: 42 },
-    { kind: 'ASSIGN', order: 1, when: 'หมวดหมู่ = Hardware และอยู่อาคาร 4', then: 'มอบหมายให้ ธนวัฒน์ ศรีสุข (Desktop Support)',
-      matchCategoryKey: 'hardware', matchLocationLike: 'อาคาร 4', assignTo: by.IT001._id, assignGroup: 'Desktop Support', hits: 67 },
-    { kind: 'ASSIGN', order: 2, when: 'หมวดหมู่ = Software', then: 'มอบหมายให้ ปิยะพงษ์ วรกุล (Application Support)',
-      matchCategoryKey: 'software', assignTo: by.IT002._id, assignGroup: 'Application Support', hits: 31 },
-    { kind: 'ESCALATE', order: 3, when: 'Critical ไม่มีผู้รับงานภายใน 15 นาที', then: 'แจ้งเตือนหัวหน้าทีม IT และยกระดับเป็น Major Incident',
-      matchPriority: 'critical', idleMinutes: 15, hits: 3 },
-    { kind: 'ESCALATE', order: 4, when: 'เหลือเวลา SLA น้อยกว่า 20%', then: 'ส่งอีเมลเตือนผู้รับผิดชอบและผู้จัดการฝ่าย',
-      slaRemainingPercent: 20, hits: 11 },
-    { kind: 'ESCALATE', order: 5, when: 'ตั๋วสถานะ "รอดำเนินการ" เกิน 3 วันทำการ', then: 'ส่งกลับคิวคัดกรองและแจ้ง Helpdesk',
-      idleMinutes: 4320, hits: 8 }
-  ]);
 
   /* ---------- ประกาศ ---------- */
   await Announcement.create([

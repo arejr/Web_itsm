@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const app = require('./app');
 const { connectDB } = require('./config/db');
 const { initSockets } = require('./sockets');
-const { startSlaMonitor } = require('./jobs/slaMonitor');
 const { platformOrigins } = require('./config/origins');
 
 const PORT = process.env.PORT || 4000;
@@ -67,7 +66,7 @@ async function seedIfEmpty() {
  * (บน PaaS ฐานข้อมูลมักสตาร์ตช้ากว่าแอป และถ้าโปรเซสดับ healthcheck จะไม่มีวันผ่าน
  *  ทำให้เห็นแค่ "Healthcheck failure" โดยไม่รู้สาเหตุที่แท้จริง)
  */
-async function connectWithRetry(io) {
+async function connectWithRetry() {
   const MAX_DELAY = 30000;
   let attempt = 0;
 
@@ -77,7 +76,6 @@ async function connectWithRetry(io) {
       await connectDB();
       app.set('dbError', null);
       await seedIfEmpty();
-      startSlaMonitor(io);
       return;
     } catch (err) {
       app.set('dbError', err.message);
@@ -113,7 +111,7 @@ async function main() {
     return; // ไม่ต่อฐานข้อมูล แต่ยังเปิดพอร์ตค้างไว้ให้ตรวจสอบได้
   }
 
-  await connectWithRetry(io);
+  await connectWithRetry();
 }
 
 // ปิดอย่างเรียบร้อยเมื่อ PaaS ส่งสัญญาณให้หยุด

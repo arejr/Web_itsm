@@ -107,8 +107,8 @@ async function req(m, path, t, body) {
   });
   check('Helpdesk ออกตั๋วแทนผู้แจ้งได้', onBehalf.status === 201, onBehalf.j.message||'');
   check('บันทึกช่องทางที่รับแจ้ง', onBehalf.j.channel === 'โทรศัพท์', onBehalf.j.channel);
-  check('กฎมอบหมายอัตโนมัติทำงาน (Software → Application Support)',
-    onBehalf.j.assignee?.name === 'ปิยะพงษ์ วรกุล', onBehalf.j.assigneeName);
+  check('ตั๋วที่ไม่ระบุผู้รับผิดชอบเข้าคิวคัดกรอง (ไม่มอบหมายอัตโนมัติ)',
+    !onBehalf.j.assignee && onBehalf.j.status === 'new', `assignee=${onBehalf.j.assigneeName} status=${onBehalf.j.status}`);
 
   // 8. Admin: จัดการผู้ใช้ (สร้าง / ระงับ / เปิด / ลบ)
   const nu = await req('POST','/users', admin, {
@@ -140,14 +140,7 @@ async function req(m, path, t, body) {
   check('ปิดการแสดงประกาศได้', !afterHide.some(a => a._id === na.j._id));
   check('Admin ลบประกาศได้', (await req('DELETE', `/announcements/${na.j._id}`, admin)).status === 200);
 
-  // 10. กฎอัตโนมัติ
-  const rules = (await req('GET','/rules', admin)).j;
-  check('อ่านรายการกฎอัตโนมัติได้', rules.length >= 6, `${rules.length} กฎ`);
-  const tg = await req('PATCH', `/rules/${rules[0]._id}`, admin, { enabled: !rules[0].enabled });
-  check('เปิด/ปิดกฎได้', tg.status === 200 && tg.j.enabled === !rules[0].enabled);
-  await req('PATCH', `/rules/${rules[0]._id}`, admin, { enabled: rules[0].enabled });
-
-  // 11. แดชบอร์ด
+  // 10. แดชบอร์ด
   const dash = (await req('GET','/stats/dashboard', admin)).j;
   check('แดชบอร์ดคืนค่า KPI ครบ',
     ['open','successRate','avgResponseMinutes','breachedThisMonth'].every(k => dash.kpis[k] !== undefined));
@@ -157,11 +150,11 @@ async function req(m, path, t, body) {
   check('ภาระงานเจ้าหน้าที่', Array.isArray(wl) && wl.length >= 3, `${wl.length} คน`);
   check('เจ้าหน้าที่ IT ดูภาระงานทีมไม่ได้ (สิทธิ์)', (await req('GET','/stats/workload', tech)).status === 403);
 
-  // 12. แจ้งเตือน อ่านทั้งหมด
+  // 11. แจ้งเตือน อ่านทั้งหมด
   await req('PATCH','/notifications/read-all', tech);
   check('ทำเครื่องหมายอ่านทั้งหมดได้', (await req('GET','/notifications', tech)).j.unread === 0);
 
-  // 13. พนักงานยกเลิกตั๋วของตัวเอง
+  // 12. พนักงานยกเลิกตั๋วของตัวเอง
   const c2 = await req('POST','/tickets', emp, { title:'ทดสอบ E2E — จะยกเลิก', description:'x' });
   const cancel = await req('PATCH', `/tickets/${c2.j._id}/status`, emp, { status:'cancelled' });
   check('พนักงานยกเลิกตั๋วของตนเองได้', cancel.status === 200 && cancel.j.status === 'cancelled');

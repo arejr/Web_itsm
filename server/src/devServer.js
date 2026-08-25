@@ -15,7 +15,6 @@ async function main() {
   const app = require('./app');
   const { connectDB } = require('./config/db');
   const { initSockets } = require('./sockets');
-  const { startSlaMonitor } = require('./jobs/slaMonitor');
   const { seedDatabase } = require('./seed');
 
   await connectDB();
@@ -24,7 +23,6 @@ async function main() {
   const server = http.createServer(app);
   const io = initSockets(server);
   app.set('io', io);
-  startSlaMonitor(io);
 
   const PORT = process.env.PORT || 4000;
   server.listen(PORT, () => console.log(`[api] listening on http://localhost:${PORT} (demo mode)`));
