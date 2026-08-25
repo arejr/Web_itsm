@@ -280,8 +280,6 @@ function goBack() {
 
             <div class="d-flex flex-column gap-3">
               <div><span class="meta-label">วันที่แจ้ง</span><span class="meta-value">{{ thDateTime(t.createdAt) }}</span></div>
-              <div><span class="meta-label">ช่องทางการแจ้ง</span><span class="meta-value">{{ t.channel }}</span></div>
-              <div><span class="meta-label">ประเภทเหตุการณ์</span><span class="meta-value">{{ t.incidentType }}</span></div>
             </div>
           </div>
 
@@ -296,7 +294,6 @@ function goBack() {
               <div><span class="meta-label">สถานที่เกิดเหตุ</span><span class="meta-value">{{ t.location || '—' }}</span></div>
             </div>
             <div class="d-flex flex-column gap-3">
-              <div><span class="meta-label">ลักษณะอาการ</span><span class="meta-value">{{ t.opCategory || '—' }}</span></div>
               <div><span class="meta-label">หมวดหมู่ผลิตภัณฑ์</span><span class="meta-value">{{ t.productCategory || '—' }}</span></div>
             </div>
           </div>
