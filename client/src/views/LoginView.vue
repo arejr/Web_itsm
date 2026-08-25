@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { APP_NAME_FULL } from '@/services/branding';
 import { HOME_BY_ROLE } from '@/router';
 
 const route = useRoute();
@@ -72,7 +73,7 @@ async function submit() {
       <div class="login-brand">
         <div class="d-flex align-items-center gap-3">
           <div class="login-mark mono">IT</div>
-          <span class="login-brand__name">IT Helpdesk and Incident Ticket Management System</span>
+          <span class="login-brand__name">{{ APP_NAME_FULL }}</span>
         </div>
 
         <div class="login-brand__body">

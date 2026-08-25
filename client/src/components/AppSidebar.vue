@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useTicketStore } from '@/stores/tickets';
 import { useUiStore } from '@/stores/ui';
+import { APP_NAME_SHORT, APP_TAGLINE } from '@/services/branding';
 
 const route = useRoute();
 const router = useRouter();
@@ -75,8 +76,8 @@ function go(name) {
     <div class="sidebar__brand">
       <div class="sidebar__mark mono">IT</div>
       <div class="d-flex flex-column">
-        <span class="sidebar__title">IT Service Desk</span>
-        <span class="sidebar__subtitle mono">Incident &amp; Ticket Management</span>
+        <span class="sidebar__title">{{ APP_NAME_SHORT }}</span>
+        <span class="sidebar__subtitle mono">{{ APP_TAGLINE }}</span>
       </div>
       <button class="sidebar__close d-lg-none" type="button" aria-label="ปิดเมนู" @click="ui.toggleSidebar(false)">×</button>
     </div>
@@ -145,7 +146,7 @@ function go(name) {
   letter-spacing: 0.5px;
 }
 .sidebar__title { font: 600 13.5px var(--font-th); color: #fff; letter-spacing: 0.2px; }
-.sidebar__subtitle { font: 400 10.5px var(--font-mono); color: var(--sidebar-muted); }
+.sidebar__subtitle { font: 400 9.5px/1.35 var(--font-mono); color: var(--sidebar-muted); }
 .sidebar__close {
   margin-left: auto; border: 0; background: transparent;
   color: #8c9aa6; font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px;

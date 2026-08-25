@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useMetaStore } from '@/stores/meta';
 import { useUiStore } from '@/stores/ui';
 import { useTicketStore } from '@/stores/tickets';
+import { APP_NAME_SHORT } from '@/services/branding';
 import AppSidebar from '@/components/AppSidebar.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 
@@ -20,7 +21,7 @@ const searchOpen = ref(false);
 const logoutState = ref(null); // null | 'confirm' | 'done'
 const bannerDismissed = ref(false);
 
-const pageTitle = computed(() => route.meta.title || 'IT Service Desk');
+const pageTitle = computed(() => route.meta.title || APP_NAME_SHORT);
 const pageSub = computed(() => {
   if (route.name === 'ticket-detail' && tickets.current) {
     return `${tickets.current.code} · ${tickets.current.title}`;
@@ -112,7 +113,7 @@ watch(
       <div class="logout-card">
         <div class="d-flex align-items-center gap-2 mb-2">
           <div class="logout-mark mono">IT</div>
-          <span class="fw-semibold" style="font-size: 14px">IT Service Desk</span>
+          <span class="fw-semibold" style="font-size: 14px">{{ APP_NAME_SHORT }}</span>
         </div>
 
         <template v-if="logoutState === 'confirm'">
