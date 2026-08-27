@@ -17,10 +17,10 @@ const error = ref('');
 
 // บัญชีตัวอย่างสำหรับทดสอบระบบ (ตรงกับข้อมูลใน seed)
 const demoAccounts = [
-  { role: 'ผู้ดูแลระบบ', sub: 'จัดการผู้ใช้ ตั้งค่าระบบ ดูภาพรวม', email: 'waraporn.c@company.co.th' },
-  { role: 'IT Helpdesk', sub: 'คัดกรองและมอบหมายตั๋วงาน', email: 'pimchanok.d@company.co.th' },
-  { role: 'เจ้าหน้าที่ IT', sub: 'รับงานและแก้ไขปัญหา', email: 'thanawat.s@company.co.th' },
-  { role: 'พนักงานบริษัท', sub: 'แจ้งปัญหาและติดตามสถานะ', email: 'asniya.n@company.co.th' }
+  { role: 'ผู้ดูแลระบบ', email: 'waraporn.c@company.co.th' },
+  { role: 'IT Helpdesk', email: 'pimchanok.d@company.co.th' },
+  { role: 'เจ้าหน้าที่ IT', email: 'thanawat.s@company.co.th' },
+  { role: 'พนักงานบริษัท', email: 'asniya.n@company.co.th' }
 ];
 
 const demoOpen = ref(false);
@@ -160,10 +160,7 @@ async function submit() {
                 :aria-selected="username === a.email"
                 @click="fill(a)"
               >
-                <span class="demo__item-main">
-                  <span class="demo__item-role">{{ a.role }}</span>
-                  <span class="demo__item-sub">{{ a.sub }}</span>
-                </span>
+                <span class="demo__item-role">{{ a.role }}</span>
               </button>
             </div>
           </div>
@@ -286,9 +283,7 @@ async function submit() {
 .demo__item:last-child { border-bottom: 0; }
 .demo__item:hover { background: var(--brand-tint); }
 .demo__item[aria-selected='true'] { background: var(--brand-tint); }
-.demo__item-main { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
 .demo__item-role { font: 500 12.5px var(--font-th); color: var(--ink); }
-.demo__item-sub { font: 400 10.5px var(--font-th); color: var(--muted-2); }
 
 
 .login-help { font: 400 11.5px/1.8 var(--font-th); color: var(--muted-3); text-align: center; margin: 0; }
