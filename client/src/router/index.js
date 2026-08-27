@@ -4,10 +4,11 @@ import { useAuthStore } from '@/stores/auth';
 const routes = [
   { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue'), meta: { public: true, layout: 'blank' } },
 
-  { path: '/', redirect: () => ({ name: 'dashboard' }) },
+  // ปล่อยให้ router guard เป็นผู้ตัดสินว่าหน้าแรกของแต่ละบทบาทคือหน้าไหน
+  { path: '/', name: 'home' },
 
   { path: '/dashboard', name: 'dashboard', component: () => import('@/views/DashboardView.vue'),
-    meta: { title: 'แดชบอร์ดภาพรวม', sub: 'สรุปสถานะตั๋วงานและประสิทธิภาพการให้บริการ' } },
+    meta: { roles: ['admin', 'helpdesk', 'tech'], title: 'แดชบอร์ดภาพรวม', sub: 'สรุปสถานะตั๋วงานและประสิทธิภาพการให้บริการ' } },
 
   { path: '/users', name: 'users', component: () => import('@/views/UsersView.vue'),
     meta: { roles: ['admin'], title: 'บริหารจัดการผู้ใช้งาน', sub: 'จัดการสมาชิก บทบาท และการเปิด–ระงับบัญชี' } },
@@ -61,7 +62,7 @@ router.beforeEach(async (to) => {
   const signedIn = auth.isAuthed && !!auth.token;
 
   if (to.meta.public) {
-    if (signedIn) return { name: HOME_BY_ROLE[auth.role] || 'dashboard' };
+    if (signedIn) return { name: HOME_BY_ROLE[auth.role] || 'my-tickets' };
     return true;
   }
 
@@ -70,9 +71,14 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { redirect: to.fullPath } };
   }
 
-  if (to.meta.roles && !to.meta.roles.includes(auth.role)) {
-    return { name: HOME_BY_ROLE[auth.role] || 'dashboard' };
-  }
+  const home = HOME_BY_ROLE[auth.role] || 'my-tickets';
+
+  // เข้าหน้าแรกของเว็บ → พาไปหน้าเริ่มต้นของบทบาทนั้น
+  if (to.name === 'home') return { name: home };
+
+  // เข้าหน้าที่ไม่มีสิทธิ์ → พากลับหน้าเริ่มต้นของบทบาท
+  if (to.meta.roles && !to.meta.roles.includes(auth.role)) return { name: home };
+
   return true;
 });
 

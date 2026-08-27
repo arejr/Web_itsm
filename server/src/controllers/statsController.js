@@ -17,9 +17,10 @@ exports.dashboard = async (req, res, next) => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    // เจ้าหน้าที่ IT เห็นเฉพาะงานที่ตนรับผิดชอบ ส่วน Admin/Helpdesk เห็นทั้งระบบ
+    // (พนักงานทั่วไปไม่มีสิทธิ์เข้าถึงเส้นทางนี้ — กันไว้ที่ชั้น route แล้ว)
     const scope = {};
     if (req.user.role === 'tech') scope.assignee = req.user._id;
-    if (req.user.role === 'employee') scope.requester = req.user._id;
 
     const [openCount, resolvedThisMonth, totalThisMonth, allTickets] = await Promise.all([
       Ticket.countDocuments({ ...scope, status: { $in: OPEN_STATUSES } }),

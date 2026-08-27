@@ -68,7 +68,7 @@ router.patch('/notifications/read-all', requireAuth, notifications.markAllRead);
 router.patch('/notifications/:id/read', requireAuth, notifications.markRead);
 
 /* ---------- สถิติ ---------- */
-router.get('/stats/dashboard', requireAuth, stats.dashboard);
+router.get('/stats/dashboard', requireAuth, requireRole('admin', 'helpdesk', 'tech'), stats.dashboard);
 router.get('/stats/workload', requireAuth, requireRole('admin', 'helpdesk'), stats.workload);
 
 module.exports = router;

@@ -146,6 +146,9 @@ async function req(m, path, t, body) {
     ['open','successRate','avgResponseMinutes','breachedThisMonth'].every(k => dash.kpis[k] !== undefined));
   check('กราฟ 14 วัน', dash.chart?.length === 14);
   check('สัดส่วนหมวดหมู่', dash.catStats?.length >= 5);
+  check('พนักงานเข้าแดชบอร์ดไม่ได้ (สิทธิ์)', (await req('GET','/stats/dashboard', emp)).status === 403);
+  check('เจ้าหน้าที่ IT เข้าแดชบอร์ดได้', (await req('GET','/stats/dashboard', tech)).status === 200);
+
   const wl = (await req('GET','/stats/workload', helpdesk)).j;
   check('ภาระงานเจ้าหน้าที่', Array.isArray(wl) && wl.length >= 3, `${wl.length} คน`);
   check('เจ้าหน้าที่ IT ดูภาระงานทีมไม่ได้ (สิทธิ์)', (await req('GET','/stats/workload', tech)).status === 403);
