@@ -151,7 +151,6 @@ async function submit() {
             </button>
 
             <div v-if="demoOpen" id="demo-account-list" class="demo__menu" role="listbox">
-              <div class="demo__menu-head mono">รหัสผ่านเดียวกันทุกบัญชี · Password123!</div>
               <button
                 v-for="a in demoAccounts"
                 :key="a.email"
@@ -275,16 +274,6 @@ async function submit() {
 @keyframes demo-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
-}
-
-.demo__menu-head {
-  position: sticky; top: 0; z-index: 1;
-  padding: 9px 12px;
-  font: 500 9.5px var(--font-mono);
-  color: var(--muted-3);
-  letter-spacing: 0.6px;
-  background: var(--surface-2);
-  border-bottom: 1px solid rgba(16, 24, 32, 0.07);
 }
 
 .demo__item {
