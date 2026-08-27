@@ -92,10 +92,7 @@ async function submit() {
       <!-- ฝั่งขวา: ฟอร์ม -->
       <div class="login-form-wrap">
         <form class="login-form" @submit.prevent="submit">
-          <div class="d-flex flex-column gap-1">
-            <span class="login-form__title">เข้าสู่ระบบ</span>
-            <span class="login-form__sub">ใช้บัญชีพนักงาน (Active Directory) ขององค์กร</span>
-          </div>
+          <span class="login-form__title">เข้าสู่ระบบ</span>
 
           <div v-if="error" class="login-error" role="alert">{{ error }}</div>
 
@@ -168,7 +165,6 @@ async function submit() {
                   <span class="demo__item-role">{{ a.role }}</span>
                   <span class="demo__item-sub">{{ a.sub }}</span>
                 </span>
-                <span class="mono demo__item-email">{{ a.email }}</span>
               </button>
             </div>
           </div>
@@ -214,7 +210,6 @@ async function submit() {
 .login-form-wrap { display: flex; align-items: center; justify-content: center; padding: 40px 38px; background: #fff; }
 .login-form { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 18px; }
 .login-form__title { font: 600 23px var(--font-th); letter-spacing: -0.3px; }
-.login-form__sub { font: 400 12.5px var(--font-th); color: var(--muted); }
 .login-error {
   padding: 10px 12px; border-radius: var(--radius);
   background: var(--danger-soft); border: 1px solid #f2c9c4;
@@ -305,14 +300,7 @@ async function submit() {
 .demo__item-main { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
 .demo__item-role { font: 500 12.5px var(--font-th); color: var(--ink); }
 .demo__item-sub { font: 400 10.5px var(--font-th); color: var(--muted-2); }
-.demo__item-email {
-  font-size: 10px; color: var(--muted-3);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42%;
-}
 
-@media (max-width: 400px) {
-  .demo__item-email { display: none; }
-}
 
 .login-help { font: 400 11.5px/1.8 var(--font-th); color: var(--muted-3); text-align: center; margin: 0; }
 
