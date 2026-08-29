@@ -340,42 +340,7 @@ function goBack() {
           </div>
         </div>
 
-        <!-- แชทเรียลไทม์ -->
-        <div class="card-surface card-surface--flush d-flex flex-column chat-card">
-          <div class="card-head">
-            <div class="card-title-sm">แชทในตั๋วงาน</div>
-            <span class="live-dot"><span class="dot" style="background: #6cb33f"></span>เรียลไทม์</span>
-            <div class="flex-fill"></div>
-            <span v-if="typingBy" class="typing mono">{{ typingBy }} กำลังพิมพ์…</span>
-          </div>
-
-          <div ref="chatBox" class="chat">
-            <p v-if="!messages.length" class="empty-state mb-0">ยังไม่มีข้อความ — เริ่มพูดคุยกับผู้เกี่ยวข้องได้เลย</p>
-            <div
-              v-for="m in messages"
-              :key="m._id"
-              class="chat__row"
-              :class="{ 'is-mine': m.sender === auth.user?._id }"
-            >
-              <span class="chat__who">{{ m.senderName }} · {{ timeOnly(m.createdAt) }}</span>
-              <div class="chat__bubble">{{ m.text }}</div>
-            </div>
-          </div>
-
-          <form class="chat__form" @submit.prevent="sendChat">
-            <input
-              v-model="chatText"
-              class="input input--sm flex-fill"
-              placeholder="พิมพ์ข้อความถึงผู้เกี่ยวข้อง…"
-              @input="onChatInput"
-            />
-            <button class="btn-slate" type="submit" :disabled="!chatText.trim()">ส่ง</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- แถบด้านข้าง -->
-      <div class="detail-rail">
+        <!-- จัดการตั๋วงาน -->
         <div class="card-surface p-3 d-flex flex-column gap-3 action-card">
           <div class="card-title-xs">
             {{ canAct ? 'จัดการตั๋วงาน' : isReadOnlyAdmin ? 'มุมมองผู้ดูแลระบบ' : 'สิ่งที่คุณทำได้' }}
@@ -464,6 +429,44 @@ function goBack() {
           </template>
         </div>
 
+      </div>
+
+      <!-- แถบด้านข้าง -->
+      <div class="detail-rail">
+        <!-- แชทเรียลไทม์ -->
+        <div class="card-surface card-surface--flush d-flex flex-column chat-card">
+          <div class="card-head">
+            <div class="card-title-sm">แชทในตั๋วงาน</div>
+            <span class="live-dot"><span class="dot" style="background: #6cb33f"></span>เรียลไทม์</span>
+            <div class="flex-fill"></div>
+            <span v-if="typingBy" class="typing mono">{{ typingBy }} กำลังพิมพ์…</span>
+          </div>
+
+          <div ref="chatBox" class="chat">
+            <p v-if="!messages.length" class="empty-state mb-0">ยังไม่มีข้อความ — เริ่มพูดคุยกับผู้เกี่ยวข้องได้เลย</p>
+            <div
+              v-for="m in messages"
+              :key="m._id"
+              class="chat__row"
+              :class="{ 'is-mine': m.sender === auth.user?._id }"
+            >
+              <span class="chat__who">{{ m.senderName }} · {{ timeOnly(m.createdAt) }}</span>
+              <div class="chat__bubble">{{ m.text }}</div>
+            </div>
+          </div>
+
+          <form class="chat__form" @submit.prevent="sendChat">
+            <input
+              v-model="chatText"
+              class="input input--sm flex-fill"
+              placeholder="พิมพ์ข้อความถึงผู้เกี่ยวข้อง…"
+              @input="onChatInput"
+            />
+            <button class="btn-slate" type="submit" :disabled="!chatText.trim()">ส่ง</button>
+          </form>
+        </div>
+
+
         <!-- ไทม์ไลน์ -->
         <div class="card-surface p-3 timeline-card">
           <div class="card-title-xs mb-3">ไทม์ไลน์ตั๋วงาน</div>
@@ -484,7 +487,7 @@ function goBack() {
 </template>
 
 <style scoped>
-.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 318px; gap: 14px; align-items: start; }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
 .detail-main { display: flex; flex-direction: column; gap: 14px; }
 .detail-rail { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 88px; }
 
@@ -539,12 +542,12 @@ function goBack() {
 .live-dot { display: flex; align-items: center; gap: 5px; font: 400 11px var(--font-th); color: var(--ok-ink); }
 .typing { font-size: 10.5px; color: var(--muted-3); }
 
-.chat { padding: 18px 20px; display: flex; flex-direction: column; gap: 13px; background: var(--surface-4); max-height: 430px; overflow: auto; }
+.chat { padding: 16px; display: flex; flex-direction: column; gap: 13px; background: var(--surface-4); min-height: 240px; max-height: 460px; overflow: auto; }
 .chat__row { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .chat__row.is-mine { align-items: flex-end; }
 .chat__who { font: 400 10.5px var(--font-th); color: var(--muted-3); }
 .chat__bubble {
-  max-width: 74%; padding: 11px 14px;
+  max-width: 86%; padding: 11px 14px;
   border-radius: 12px 12px 12px 3px;
   background: #fff; color: var(--ink-strong);
   border: 1px solid rgba(16, 24, 32, 0.1);
@@ -555,7 +558,7 @@ function goBack() {
   border-radius: 12px 12px 3px 12px;
   background: var(--brand); color: #fff; border-color: var(--brand);
 }
-.chat__form { padding: 13px 16px; border-top: 1px solid rgba(16, 24, 32, 0.08); display: flex; align-items: center; gap: 9px; }
+.chat__form { padding: 12px; border-top: 1px solid rgba(16, 24, 32, 0.08); display: flex; align-items: center; gap: 8px; }
 
 .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .status-btn {
@@ -590,13 +593,9 @@ function goBack() {
   .detail-layout { grid-template-columns: 1fr; }
   .detail-rail { position: static; }
 
-  /* จอแคบไม่มีคอลัมน์ข้าง — ยุบสองคอลัมน์ให้เป็นรายการเดียว
-     แล้วดันแผงจัดการขึ้นมาต่อจากข้อมูลตั๋วทันที ไม่ให้ตกไปอยู่ท้ายสุดหลังแชท */
+  /* จอแคบไม่มีคอลัมน์ข้าง — ยุบสองคอลัมน์ให้เรียงต่อกันเป็นรายการเดียว
+     ลำดับที่ได้: ข้อมูลตั๋ว → จัดการตั๋วงาน → แชท → ไทม์ไลน์ */
   .detail-main, .detail-rail { display: contents; }
-  .record-card { order: 1; }
-  .action-card { order: 2; }
-  .chat-card { order: 3; }
-  .timeline-card { order: 4; }
 }
 @media (max-width: 767.98px) {
   .record__grid { grid-template-columns: 1fr; gap: 16px; }
