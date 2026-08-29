@@ -178,7 +178,9 @@ exports.create = async (req, res, next) => {
         ticketCode: ticket.code
       });
     } else {
-      const desk = await User.find({ role: { $in: ['helpdesk', 'admin'] }, active: true }).select('_id');
+      // ตั๋วที่ยังไม่มีผู้รับผิดชอบเป็นหน้าที่ของ Helpdesk ในการคัดกรอง
+      // จึงแจ้งเฉพาะ Helpdesk — บทบาทอื่นจะได้รับแจ้งเตือนเฉพาะตั๋วที่ตนเกี่ยวข้องด้วย
+      const desk = await User.find({ role: 'helpdesk', active: true }).select('_id');
       await notify(io, {
         userIds: desk.map((u) => u._id),
         tag: 'ตั๋วใหม่',

@@ -67,6 +67,16 @@ async function req(m, path, t, body) {
   check('เจ้าหน้าที่ได้รับแจ้งเตือนการมอบหมาย',
     techNotifs.items.some(n => n.tag === 'มอบหมาย' && n.ticketCode === created.j.code));
 
+  // ขอบเขตการแจ้งเตือนตามบทบาท
+  const hdNotifs = (await req('GET','/notifications', helpdesk)).j;
+  const admNotifs = (await req('GET','/notifications', admin)).j;
+  check('Helpdesk ได้รับแจ้งเตือนตั๋วเข้าใหม่',
+    hdNotifs.items.some(n => n.tag === 'ตั๋วใหม่' && n.ticketCode === created.j.code));
+  check('Admin ไม่ได้รับแจ้งเตือนตั๋วเข้าใหม่',
+    !admNotifs.items.some(n => n.tag === 'ตั๋วใหม่'), `${admNotifs.items.length} รายการ`);
+  check('Helpdesk ไม่ได้รับแจ้งเตือนของตั๋วที่ไม่ได้รับผิดชอบ',
+    !hdNotifs.items.some(n => n.ticketCode === created.j.code && n.tag !== 'ตั๋วใหม่'));
+
   // 3. เจ้าหน้าที่ IT อัปเดตสถานะ
   for (const st of ['inprogress','pending','inprogress']) {
     const r = await req('PATCH', `/tickets/${tid}/status`, tech, { status: st });
