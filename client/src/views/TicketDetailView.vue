@@ -211,9 +211,9 @@ function goBack() {
     <button class="btn-ghost align-self-start" type="button" @click="goBack">← กลับไปหน้ารายการ</button>
 
     <div class="detail-layout">
-      <div class="d-flex flex-column gap-3">
+      <div class="detail-main">
         <!-- บันทึกเหตุการณ์ (Incident record) -->
-        <div class="card-surface card-surface--flush">
+        <div class="card-surface card-surface--flush record-card">
           <div class="record__accent" :style="{ background: prio(t.priority).dot }"></div>
 
           <div class="record__head">
@@ -341,7 +341,7 @@ function goBack() {
         </div>
 
         <!-- แชทเรียลไทม์ -->
-        <div class="card-surface card-surface--flush d-flex flex-column">
+        <div class="card-surface card-surface--flush d-flex flex-column chat-card">
           <div class="card-head">
             <div class="card-title-sm">แชทในตั๋วงาน</div>
             <span class="live-dot"><span class="dot" style="background: #6cb33f"></span>เรียลไทม์</span>
@@ -376,7 +376,7 @@ function goBack() {
 
       <!-- แถบด้านข้าง -->
       <div class="detail-rail">
-        <div class="card-surface p-3 d-flex flex-column gap-3">
+        <div class="card-surface p-3 d-flex flex-column gap-3 action-card">
           <div class="card-title-xs">
             {{ canAct ? 'จัดการตั๋วงาน' : isReadOnlyAdmin ? 'มุมมองผู้ดูแลระบบ' : 'สิ่งที่คุณทำได้' }}
           </div>
@@ -465,7 +465,7 @@ function goBack() {
         </div>
 
         <!-- ไทม์ไลน์ -->
-        <div class="card-surface p-3">
+        <div class="card-surface p-3 timeline-card">
           <div class="card-title-xs mb-3">ไทม์ไลน์ตั๋วงาน</div>
           <div v-for="(e, i) in [...(t.timeline || [])].reverse()" :key="i" class="timeline">
             <div class="timeline__marker">
@@ -485,7 +485,21 @@ function goBack() {
 
 <style scoped>
 .detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 318px; gap: 14px; align-items: start; }
+.detail-main { display: flex; flex-direction: column; gap: 14px; }
 .detail-rail { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 88px; }
+
+/* แผงจัดการเป็นพื้นที่ทำงานหลักของหน้านี้ — ทำให้เด่นกว่ากล่องข้อมูลทั่วไป */
+.action-card {
+  border-color: rgba(20, 119, 107, 0.35);
+  box-shadow: 0 6px 20px rgba(20, 119, 107, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.action-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--brand);
+}
 
 .record__accent { height: 3px; }
 .record__head { padding: 20px 24px 18px; display: flex; flex-direction: column; gap: 11px; }
@@ -575,6 +589,14 @@ function goBack() {
 @media (max-width: 1199.98px) {
   .detail-layout { grid-template-columns: 1fr; }
   .detail-rail { position: static; }
+
+  /* จอแคบไม่มีคอลัมน์ข้าง — ยุบสองคอลัมน์ให้เป็นรายการเดียว
+     แล้วดันแผงจัดการขึ้นมาต่อจากข้อมูลตั๋วทันที ไม่ให้ตกไปอยู่ท้ายสุดหลังแชท */
+  .detail-main, .detail-rail { display: contents; }
+  .record-card { order: 1; }
+  .action-card { order: 2; }
+  .chat-card { order: 3; }
+  .timeline-card { order: 4; }
 }
 @media (max-width: 767.98px) {
   .record__grid { grid-template-columns: 1fr; gap: 16px; }
