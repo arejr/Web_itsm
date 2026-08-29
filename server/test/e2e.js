@@ -113,6 +113,10 @@ async function req(m, path, t, body) {
     (await req('PATCH', `/tickets/${tid}/resolve`, piyapong, { note: 'x' })).status === 403);
   check('ช่างคนอื่นยังดูรายละเอียดตั๋วได้',
     (await req('GET', `/tickets/${tid}`, piyapong)).status === 200);
+  check('ช่างคนอื่นตอบแชทในตั๋วที่ไม่ใช่ของตนไม่ได้',
+    (await req('POST', `/tickets/${tid}/messages`, piyapong, { text: 'ขอแทรก' })).status === 403);
+  check('ช่างคนอื่นยังดูประวัติแชทได้',
+    (await req('GET', `/tickets/${tid}/messages`, piyapong)).status === 200);
 
   // 5. โอนย้ายตั๋วให้ทีมอื่น (เป็นหน้าที่ของ Helpdesk)
   const siriporn = techs.find(x => x.name.startsWith('ศิริพร'));
@@ -120,6 +124,10 @@ async function req(m, path, t, body) {
   check('Helpdesk โอนย้ายตั๋วให้ทีมอื่นได้', tr.status === 200 && tr.j.assignee?._id === siriporn._id, tr.j.message||'');
   check('ช่างเดิมหมดสิทธิ์หลังตั๋วถูกโอนไปให้คนอื่น',
     (await req('PATCH', `/tickets/${tid}/status`, tech, { status: 'pending' })).status === 403);
+  check('ช่างเดิมตอบแชทไม่ได้หลังถูกโอนงาน',
+    (await req('POST', `/tickets/${tid}/messages`, tech, { text: 'ขอตอบต่อ' })).status === 403);
+  check('ช่างเดิมยังดูประวัติแชทได้หลังถูกโอนงาน',
+    (await req('GET', `/tickets/${tid}/messages`, tech)).status === 200);
 
   // 6. ปิดตั๋วพร้อมบันทึก Resolution Note + เผยแพร่เข้า KB (โดยผู้รับผิดชอบคนใหม่)
   const newOwner = await login('siriporn.m@company.co.th');

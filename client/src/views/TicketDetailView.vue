@@ -122,6 +122,9 @@ const canAct = computed(() => auth.isHelpdesk || (auth.isTech && isMyTicket.valu
 // เจ้าหน้าที่ IT ที่ไม่ใช่ผู้รับผิดชอบตั๋วใบนี้ — ดูได้อย่างเดียว
 const isOtherTech = computed(() => auth.isTech && !isMyTicket.value);
 
+// ตอบแชทได้เฉพาะผู้ที่เกี่ยวข้องกับตั๋วใบนั้น — ช่างที่ถูกโอนงานไปแล้วดูประวัติได้อย่างเดียว
+const canChat = computed(() => !isOtherTech.value);
+
 /**
  * สิ่งที่แต่ละบทบาททำได้ในแผงจัดการตั๋วงาน
  *   เจ้าหน้าที่ฝ่าย IT — รับงาน (กำลังดำเนินการ) แล้วบันทึกวิธีแก้เพื่อปิดงาน
@@ -505,7 +508,7 @@ function goBack() {
             </div>
           </div>
 
-          <form class="chat__form" @submit.prevent="sendChat">
+          <form v-if="canChat" class="chat__form" @submit.prevent="sendChat">
             <input
               v-model="chatText"
               class="input input--sm flex-fill"
@@ -514,6 +517,11 @@ function goBack() {
             />
             <button class="btn-slate" type="submit" :disabled="!chatText.trim()">ส่ง</button>
           </form>
+
+          <div v-else class="chat__locked">
+            ตั๋วงานนี้มอบหมายให้ <strong>{{ t.assigneeName }}</strong> —
+            คุณดูประวัติการสนทนาได้ แต่ตอบแชทไม่ได้
+          </div>
         </div>
 
 
@@ -609,6 +617,14 @@ function goBack() {
   background: var(--brand); color: #fff; border-color: var(--brand);
 }
 .chat__form { padding: 12px; border-top: 1px solid rgba(16, 24, 32, 0.08); display: flex; align-items: center; gap: 8px; }
+.chat__locked {
+  padding: 13px 14px;
+  border-top: 1px solid rgba(16, 24, 32, 0.08);
+  background: var(--surface-2);
+  font: 400 11.5px/1.7 var(--font-th);
+  color: var(--muted);
+  text-align: center;
+}
 
 .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .status-btn {

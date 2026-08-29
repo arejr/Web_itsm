@@ -53,8 +53,12 @@ function initSockets(httpServer) {
 
         const ticket = await Ticket.findById(ticketId);
         if (!ticket) return ack?.({ ok: false, message: 'ไม่พบตั๋วงาน' });
+        // ใช้กฎเดียวกับ REST: เฉพาะผู้ที่เกี่ยวข้องกับตั๋วใบนั้นจึงส่งข้อความได้
         if (socket.user.role === 'employee' && String(ticket.requester) !== String(socket.user._id)) {
           return ack?.({ ok: false, message: 'ไม่มีสิทธิ์' });
+        }
+        if (socket.user.role === 'tech' && String(ticket.assignee || '') !== String(socket.user._id)) {
+          return ack?.({ ok: false, message: 'ตั๋วงานนี้ไม่ได้มอบหมายให้คุณ จึงตอบแชทไม่ได้' });
         }
 
         const message = await Message.create({

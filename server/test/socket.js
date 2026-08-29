@@ -28,9 +28,20 @@ const wait = (ms) => new Promise(r => setTimeout(r, ms));
   await Promise.all([techS, empS].map(s => new Promise(r => s.on('connect', r))));
   results.push(['เชื่อมต่อ socket ด้วย token สำเร็จ', true]);
 
-  // หาตั๋วของผู้แจ้งรายนี้
-  const list = await (await fetch(`${BASE}/api/tickets`, { headers: { Authorization: `Bearer ${empTok}` } })).json();
-  const t = list.find(x => !['resolved','cancelled'].includes(x.status)) || list[0];
+  // สร้างตั๋วใหม่ที่มอบหมายให้เจ้าหน้าที่คนนี้โดยตรง
+  // (เจ้าหน้าที่ IT ตอบแชทได้เฉพาะตั๋วที่ตนได้รับมอบหมาย)
+  const techs = await (await fetch(`${BASE}/api/users/technicians`, { headers: { Authorization: `Bearer ${hdTok}` } })).json();
+  const me = techs.find((x) => x.name.startsWith('ธนวัฒน์'));
+  const t = await (await fetch(`${BASE}/api/tickets`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${empTok}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'ทดสอบแชทเรียลไทม์', description: 'x' })
+  })).json();
+  await fetch(`${BASE}/api/tickets/${t._id}/triage`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${hdTok}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ assigneeId: me._id })
+  });
 
   techS.emit('ticket:join', t._id);
   empS.emit('ticket:join', t._id);

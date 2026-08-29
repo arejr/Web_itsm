@@ -2,9 +2,26 @@ const Message = require('../models/Message');
 const Ticket = require('../models/Ticket');
 const { notify } = require('../utils/notify');
 
-function canAccess(user, ticket) {
+/** ดูประวัติแชทได้ — พนักงานทั่วไปดูได้เฉพาะตั๋วที่ตนแจ้ง นอกนั้นดูได้ทั้งหมด */
+function canRead(user, ticket) {
   if (user.role !== 'employee') return true;
   return String(ticket.requester) === String(user._id);
+}
+
+/**
+ * ส่งข้อความได้ — เฉพาะผู้ที่เกี่ยวข้องกับตั๋วใบนั้นจริง ๆ
+ *   พนักงานทั่วไป      ตั๋วที่ตนแจ้ง
+ *   เจ้าหน้าที่ฝ่าย IT  ตั๋วที่ตนได้รับมอบหมายเท่านั้น
+ *                      (ถูกโอนงานไปให้คนอื่นแล้วจะตอบแชทไม่ได้ แต่ยังดูประวัติได้)
+ *   IT Helpdesk        ทุกใบ เพราะมีหน้าที่ประสานงานกับผู้แจ้ง
+ */
+function canWrite(user, ticket) {
+  if (user.role === 'employee') return String(ticket.requester) === String(user._id);
+  if (user.role === 'tech') {
+    const assignee = ticket.assignee?._id || ticket.assignee;
+    return !!assignee && String(assignee) === String(user._id);
+  }
+  return true;
 }
 
 // GET /api/tickets/:id/messages
@@ -12,7 +29,7 @@ exports.list = async (req, res, next) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ message: 'ไม่พบตั๋วงานนี้' });
-    if (!canAccess(req.user, ticket)) return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ดูแชทนี้' });
+    if (!canRead(req.user, ticket)) return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ดูแชทนี้' });
 
     const messages = await Message.find({ ticket: ticket._id }).sort({ createdAt: 1 });
 
@@ -36,7 +53,11 @@ exports.create = async (req, res, next) => {
 
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ message: 'ไม่พบตั๋วงานนี้' });
-    if (!canAccess(req.user, ticket)) return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ส่งข้อความในตั๋วนี้' });
+    if (!canWrite(req.user, ticket)) {
+      return res.status(403).json({
+        message: 'ตั๋วงานนี้ไม่ได้มอบหมายให้คุณ จึงตอบแชทไม่ได้ แต่ยังดูประวัติการสนทนาได้'
+      });
+    }
 
     const message = await Message.create({
       ticket: ticket._id,
