@@ -366,9 +366,9 @@ function goBack() {
         </div>
 
         <!-- จัดการตั๋วงาน -->
-        <div class="card-surface p-3 d-flex flex-column gap-3 action-card">
+        <div v-if="!isOtherTech" class="card-surface p-3 d-flex flex-column gap-3 action-card">
           <div class="card-title-xs">
-            {{ canAct ? 'จัดการตั๋วงาน' : isOtherTech || isReadOnlyAdmin ? 'ดูอย่างเดียว' : 'สิ่งที่คุณทำได้' }}
+            {{ canAct ? 'จัดการตั๋วงาน' : isReadOnlyAdmin ? 'มุมมองผู้ดูแลระบบ' : 'สิ่งที่คุณทำได้' }}
           </div>
 
           <template v-if="canAct">
@@ -426,23 +426,6 @@ function goBack() {
             >
               ยกเลิกตั๋วงาน
             </button>
-          </template>
-
-          <template v-else-if="isOtherTech">
-            <div class="employee-hint">
-              ตั๋วงานนี้มอบหมายให้ <strong>{{ t.assigneeName }}</strong>
-              คุณจึงดูรายละเอียดและสถานะได้ แต่ดำเนินการแทนไม่ได้
-              หากต้องรับงานนี้ต่อ ให้แจ้ง IT Helpdesk เพื่อโอนย้ายให้
-            </div>
-            <div class="admin-state">
-              <div><span class="meta-label">สถานะปัจจุบัน</span><span class="meta-value" :style="{ color: stat(t.status).fg }">{{ stat(t.status).label }}</span></div>
-              <div><span class="meta-label">ผู้รับผิดชอบ</span><span class="meta-value">{{ t.assigneeName }}</span></div>
-              <div><span class="meta-label">กำหนดเสร็จ</span><span class="meta-value mono" :style="{ color: t.slaRisk ? '#a12626' : '#22292f' }">{{ t.slaText }}</span></div>
-            </div>
-            <div v-if="t.resolutionNote" class="resolution-box">
-              <span class="meta-label">วิธีแก้ปัญหาที่บันทึกไว้</span>
-              <span style="font: 400 12px/1.8 var(--font-th); color: var(--ink-2)">{{ t.resolutionNote }}</span>
-            </div>
           </template>
 
           <template v-else-if="isReadOnlyAdmin">
