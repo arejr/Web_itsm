@@ -310,6 +310,13 @@ exports.resolve = async (req, res, next) => {
     const denied = assigneeGuard(req.user, ticket);
     if (denied) return res.status(403).json({ message: denied });
 
+    // กันปิดซ้ำ — ไม่งั้นไทม์ไลน์จะมีรายการปิดงานซ้ำและสร้างบทความ KB ซ้ำทุกครั้งที่กด
+    if (['resolved', 'cancelled'].includes(ticket.status)) {
+      return res.status(400).json({
+        message: ticket.status === 'cancelled' ? 'ตั๋วงานนี้ถูกยกเลิกไปแล้ว' : 'ตั๋วงานนี้ปิดไปแล้ว'
+      });
+    }
+
     if (!note || !String(note).trim()) {
       return res.status(400).json({ message: 'กรุณาบันทึกวิธีแก้ปัญหา (Resolution Note) ก่อนปิดตั๋วงาน' });
     }

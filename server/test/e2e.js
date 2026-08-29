@@ -142,6 +142,12 @@ async function req(m, path, t, body) {
   const kbAfter = (await req('GET','/articles', newOwner)).j.length;
   check('จำนวนบทความ KB เพิ่มขึ้น', kbAfter === kbBefore + 1, `${kbBefore} → ${kbAfter}`);
 
+  // กดปิดซ้ำไม่ได้ — ป้องกันไทม์ไลน์และบทความ KB ซ้ำ
+  const again = await req('PATCH', `/tickets/${tid}/resolve`, newOwner, { note: 'กดซ้ำ', publishToKb: true });
+  check('ปิดตั๋วที่ปิดไปแล้วซ้ำไม่ได้', again.status === 400, again.j.message || '');
+  check('บทความ KB ไม่ถูกสร้างซ้ำ',
+    (await req('GET','/articles', newOwner)).j.length === kbAfter);
+
   // 7. แจ้งปัญหาได้เฉพาะพนักงานบริษัท
   const staffCreate = { title: 'ทีม IT ไม่ควรแจ้งปัญหาเองได้', description: 'x' };
   check('Helpdesk แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', helpdesk, staffCreate)).status === 403);

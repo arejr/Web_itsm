@@ -125,6 +125,9 @@ const isOtherTech = computed(() => auth.isTech && !isMyTicket.value);
 // ตอบแชทได้เฉพาะผู้ที่เกี่ยวข้องกับตั๋วใบนั้น — ช่างที่ถูกโอนงานไปแล้วดูประวัติได้อย่างเดียว
 const canChat = computed(() => !isOtherTech.value);
 
+// ตั๋วที่ปิดหรือยกเลิกแล้วไม่ต้องมีปุ่มปิดงานและโอนย้ายอีก เหลือแค่แสดงวิธีแก้ที่บันทึกไว้
+const isClosed = computed(() => ['resolved', 'cancelled'].includes(t.value?.status));
+
 /**
  * สิ่งที่แต่ละบทบาททำได้ในแผงจัดการตั๋วงาน
  *   เจ้าหน้าที่ฝ่าย IT — รับงาน (กำลังดำเนินการ) แล้วบันทึกวิธีแก้เพื่อปิดงาน
@@ -387,6 +390,18 @@ function goBack() {
               </button>
             </div>
 
+            <!-- ปิดหรือยกเลิกงานแล้ว — แสดงวิธีแก้ที่บันทึกไว้อย่างเดียว -->
+            <template v-if="isClosed">
+              <div class="resolution-box">
+                <span class="meta-label">วิธีแก้ปัญหาที่บันทึกไว้</span>
+                <span class="resolution-box__text">{{ t.resolutionNote || 'ไม่ได้บันทึกวิธีแก้ไว้' }}</span>
+              </div>
+              <p class="closed-hint mb-0">
+                ตั๋วงานนี้{{ t.status === 'cancelled' ? 'ถูกยกเลิกแล้ว' : 'ปิดเรียบร้อยแล้ว' }}
+              </p>
+            </template>
+
+            <template v-else>
             <textarea
               v-model="note"
               class="input input--sm"
@@ -417,7 +432,7 @@ function goBack() {
             </div>
 
             <button
-              v-if="showCancelButton && !['resolved', 'cancelled'].includes(t.status)"
+              v-if="showCancelButton"
               class="btn-ghost w-100"
               type="button"
               style="color: var(--danger-ink)"
@@ -426,6 +441,7 @@ function goBack() {
             >
               ยกเลิกตั๋วงาน
             </button>
+            </template>
           </template>
 
           <template v-else-if="isReadOnlyAdmin">
@@ -628,6 +644,8 @@ function goBack() {
   font: 400 12px/1.7 var(--font-th); color: var(--ink-3);
 }
 .resolution-box { padding: 12px; border-radius: 9px; background: var(--ok-soft); border: 1px solid #d6e6bd; display: flex; flex-direction: column; gap: 4px; }
+.resolution-box__text { font: 400 12.5px/1.8 var(--font-th); color: var(--ink-2); white-space: pre-line; }
+.closed-hint { font: 400 11.5px var(--font-th); color: var(--muted-2); text-align: center; }
 .admin-state { display: flex; flex-direction: column; gap: 11px; padding: 12px; border-radius: 9px; background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07); }
 
 .timeline { display: grid; grid-template-columns: 14px 1fr; gap: 11px; }
