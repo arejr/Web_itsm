@@ -198,7 +198,7 @@ async function removeAnn(a) {
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span
               class="pill pill--mono"
-              :style="a.published ? { background: '#e4f1ee', color: '#0f6a5f' } : { background: '#f2f4f6', color: '#69737b' }"
+              :style="a.published ? { background: '#e4f1ee', color: '#0f6a5f' } : { background: '#f2f4f6', color: '#545e66' }"
             >
               {{ a.published ? 'เผยแพร่อยู่' : 'ร่าง' }}
             </span>

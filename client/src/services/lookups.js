@@ -13,7 +13,7 @@ export const STATUS = {
   assigned: { label: 'มอบหมายแล้ว', fg: '#0f6a5f', bg: '#e4f1ee', dot: '#14776b' },
   inprogress: { label: 'กำลังดำเนินการ', fg: '#0f6a5f', bg: '#e4f1ee', dot: '#14776b' },
   resolved: { label: 'แก้ไขสำเร็จ', fg: '#5a9c33', bg: '#eef6e4', dot: '#5a9c33' },
-  cancelled: { label: 'ยกเลิก', fg: '#69737b', bg: '#f2f4f6', dot: '#9aa4ac' }
+  cancelled: { label: 'ยกเลิก', fg: '#545e66', bg: '#f2f4f6', dot: '#8a939b' }
 };
 export const STATUS_TRACK = [
   { key: 'new', label: 'รับเรื่อง' },
@@ -51,7 +51,7 @@ export const NOTIF_TINT = {
   ตั๋วใหม่: { bg: '#fff6e5', fg: '#8a5a08', dot: '#d97706' },
   สถานะ: { bg: '#f2f4f6', fg: '#4a545c', dot: '#69737b' },
   ปิดงาน: { bg: '#eef6e4', fg: '#4a7f22', dot: '#6cb33f' },
-  ระบบ: { bg: '#f2f4f6', fg: '#69737b', dot: '#9aa4ac' }
+  ระบบ: { bg: '#f2f4f6', fg: '#545e66', dot: '#8a939b' }
 };
 
 export function prio(key) {

@@ -286,7 +286,7 @@ function goBack() {
               <div class="track">
                 <div v-for="(s, i) in STATUS_TRACK" :key="s.key" class="track__step">
                   <div class="track__bar" :style="{ background: i <= trackIndex ? '#6cb33f' : '#e3e7ea' }"></div>
-                  <span class="track__label" :style="{ color: i <= trackIndex ? '#22292f' : '#9aa4ac' }">{{ s.label }}</span>
+                  <span class="track__label" :style="{ color: i <= trackIndex ? '#22292f' : 'var(--muted-3)' }">{{ s.label }}</span>
                 </div>
               </div>
             </div>
