@@ -19,7 +19,6 @@ const NAV_BY_ROLE = {
   admin: [
     { name: 'dashboard', label: 'แดชบอร์ดภาพรวม', en: 'Dashboard' },
     { name: 'queue', label: 'ตั๋วงานทั้งหมด', en: 'All Tickets', badge: 'open' },
-    { name: 'board', label: 'คิวงานตามสถานะ', en: 'Board' },
     { name: 'users', label: 'จัดการผู้ใช้งาน', en: 'User Management' },
     { name: 'settings', label: 'ตั้งค่าระบบ', en: 'System Settings' },
     { name: 'kb', label: 'ฐานความรู้', en: 'Knowledge Base' }

@@ -20,7 +20,7 @@ const routes = [
     meta: { roles: ['admin', 'helpdesk', 'tech'], title: 'คิวตั๋วงาน', sub: 'ตรวจสอบ คัดกรอง จัดหมวดหมู่ และมอบหมายงาน' } },
 
   { path: '/board', name: 'board', component: () => import('@/views/BoardView.vue'),
-    meta: { roles: ['admin', 'helpdesk', 'tech'], title: 'คิวงานตามสถานะ', sub: 'ติดตามงานที่รับผิดชอบแยกตามสถานะการทำงาน' } },
+    meta: { roles: ['helpdesk', 'tech'], title: 'คิวงานตามสถานะ', sub: 'ติดตามงานที่รับผิดชอบแยกตามสถานะการทำงาน' } },
 
   { path: '/kb', name: 'kb', component: () => import('@/views/KnowledgeBaseView.vue'),
     meta: { title: 'ฐานความรู้ (Knowledge Base)', sub: 'วิธีแก้ปัญหาที่บันทึกจาก Resolution Note' } },
