@@ -21,11 +21,11 @@
   --ink-strong: #22292f;
   --ink-2: #3d464e;
   --ink-3: #4a545c;
-  /* เทาสำหรับข้อความรอง — เข้มพอให้อ่านออกบนพื้นขาวและพื้นเทาอ่อนของหน้า
-     ค่าเดิม (#69737b / #8a939b / #9aa4ac) จางจนป้ายกำกับตัวเล็กอ่านยาก */
-  --muted: #4e585f;
-  --muted-2: #616b73;
-  --muted-3: #6b757d;
+  /* เทาสำหรับข้อความรอง — ป้ายกำกับส่วนใหญ่เป็นตัวอักษร 11–12.5px น้ำหนักบาง
+     จึงต้องเข้มกว่าสีเทาทั่วไปมากถึงจะอ่านสบายบนพื้นขาวและพื้นเทาอ่อนของหน้า */
+  --muted: #39424a;
+  --muted-2: #454f57;
+  --muted-3: #4c565e;
 
   /* เส้นขอบ */
   --line: rgba(16, 24, 32, 0.09);
@@ -128,7 +128,7 @@ input, textarea, select, button { font-family: inherit; }
 .card-title-xs { font: 600 12.5px var(--font-th); margin: 0; }
 
 .section-label { font: 500 11.5px var(--font-th); color: var(--muted); }
-.meta-label { font: 400 11px var(--font-th); color: var(--muted-3); display: block; }
+.meta-label { font: 500 11px var(--font-th); color: var(--muted-3); display: block; }
 .meta-value { font: 500 13px var(--font-th); color: var(--ink-strong); }
 .text-muted-2 { color: var(--muted-2) !important; }
 .text-muted-3 { color: var(--muted-3) !important; }
