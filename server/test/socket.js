@@ -61,14 +61,18 @@ const wait = (ms) => new Promise(r => setTimeout(r, ms));
   results.push(['ได้รับสัญญาณกำลังพิมพ์', typing?.typing === true]);
 
   // การแจ้งเตือนแบบ push เมื่อมีการมอบหมาย
+  // พนักงานเป็นผู้แจ้ง แล้ว Helpdesk คัดกรองมอบหมายให้เจ้าหน้าที่
   const gotNotif = new Promise(r => techS.once('notification:new', r));
   const newT = await (await fetch(`${BASE}/api/tickets`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${hdTok}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: 'ทดสอบ socket — มอบหมายทันที', description: 'x',
-      assigneeId: (await (await fetch(`${BASE}/api/users/technicians`, { headers: { Authorization: `Bearer ${hdTok}` } })).json())
-        .find(u => u.name.startsWith('ธนวัฒน์'))._id })
+    headers: { Authorization: `Bearer ${empTok}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'ทดสอบ socket — มอบหมายทันที', description: 'x' })
   })).json();
+  await fetch(`${BASE}/api/tickets/${newT._id}/triage`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${hdTok}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ assigneeId: me._id })
+  });
   const notif = await Promise.race([gotNotif, wait(2500).then(()=>null)]);
   results.push(['ได้รับ push แจ้งเตือนการมอบหมาย', notif?.ticketCode === newT.code, notif?.title]);
 

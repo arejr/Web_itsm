@@ -26,7 +26,7 @@ const routes = [
     meta: { title: 'ฐานความรู้ (Knowledge Base)', sub: 'วิธีแก้ปัญหาที่บันทึกจาก Resolution Note' } },
 
   { path: '/new', name: 'new-ticket', component: () => import('@/views/NewTicketView.vue'),
-    meta: { title: 'แจ้งปัญหาใหม่', sub: 'กรอกรายละเอียดให้ครบเพื่อให้ทีม IT แก้ไขได้เร็วขึ้น' } },
+    meta: { roles: ['employee'], title: 'แจ้งปัญหาใหม่', sub: 'กรอกรายละเอียดให้ครบเพื่อให้ทีม IT แก้ไขได้เร็วขึ้น' } },
 
   { path: '/my-tickets', name: 'my-tickets', component: () => import('@/views/MyTicketsView.vue'),
     meta: { title: 'ตั๋วงานของฉัน', sub: 'ติดตามสถานะและประวัติการแจ้งปัญหาย้อนหลัง' } },

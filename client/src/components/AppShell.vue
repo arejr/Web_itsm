@@ -89,10 +89,10 @@ watch(
 
         <NotificationBell />
 
-        <RouterLink v-if="!auth.isEmployee" :to="{ name: 'new-ticket' }" class="btn-brand topbar__cta">
+        <!-- แจ้งปัญหาได้เฉพาะพนักงานบริษัท -->
+        <RouterLink v-if="auth.isEmployee" :to="{ name: 'new-ticket' }" class="btn-brand topbar__cta">
           + แจ้งปัญหาใหม่
         </RouterLink>
-        <RouterLink v-else :to="{ name: 'new-ticket' }" class="btn-brand topbar__cta">+ แจ้งปัญหาใหม่</RouterLink>
       </header>
 
       <div v-if="banner" class="banner">

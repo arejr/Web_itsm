@@ -142,16 +142,16 @@ async function req(m, path, t, body) {
   const kbAfter = (await req('GET','/articles', newOwner)).j.length;
   check('จำนวนบทความ KB เพิ่มขึ้น', kbAfter === kbBefore + 1, `${kbBefore} → ${kbAfter}`);
 
-  // 7. Helpdesk ออกตั๋วแทนผู้แจ้ง (walk-in / โทรศัพท์)
-  const onBehalf = await req('POST','/tickets', helpdesk, {
-    title:'ทดสอบ E2E — แจ้งทางโทรศัพท์', description:'ผู้ใช้โทรแจ้ง',
-    requesterName:'สมหญิง ทดสอบ', requesterDept:'ฝ่ายจัดซื้อ', channel:'โทรศัพท์',
-    categoryId: cats.find(c=>c.key==='software')._id, priority:'medium'
-  });
-  check('Helpdesk ออกตั๋วแทนผู้แจ้งได้', onBehalf.status === 201, onBehalf.j.message||'');
-  check('บันทึกช่องทางที่รับแจ้ง', onBehalf.j.channel === 'โทรศัพท์', onBehalf.j.channel);
-  check('ตั๋วที่ไม่ระบุผู้รับผิดชอบเข้าคิวคัดกรอง (ไม่มอบหมายอัตโนมัติ)',
-    !onBehalf.j.assignee && onBehalf.j.status === 'new', `assignee=${onBehalf.j.assigneeName} status=${onBehalf.j.status}`);
+  // 7. แจ้งปัญหาได้เฉพาะพนักงานบริษัท
+  const staffCreate = { title: 'ทีม IT ไม่ควรแจ้งปัญหาเองได้', description: 'x' };
+  check('Helpdesk แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', helpdesk, staffCreate)).status === 403);
+  check('เจ้าหน้าที่ IT แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', tech, staffCreate)).status === 403);
+  check('Admin แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', admin, staffCreate)).status === 403);
+
+  const byEmp = await req('POST', '/tickets', emp, { title: 'พนักงานแจ้งปัญหาได้', description: 'x' });
+  check('พนักงานบริษัทแจ้งปัญหาได้', byEmp.status === 201, byEmp.j.message || '');
+  check('ตั๋วที่แจ้งใหม่เข้าคิวคัดกรอง',
+    !byEmp.j.assignee && byEmp.j.status === 'new', `assignee=${byEmp.j.assigneeName} status=${byEmp.j.status}`);
 
   // 8. Admin: จัดการผู้ใช้ (สร้าง / ระงับ / เปิด / ลบ)
   const nu = await req('POST','/users', admin, {
