@@ -115,6 +115,10 @@ async function sendChat() {
 /* ---------- การจัดการตั๋ว ---------- */
 // ผู้ดูแลระบบดูตั๋วงานได้อย่างเดียว การจัดการงานเป็นหน้าที่ของ Helpdesk และเจ้าหน้าที่ IT
 const canAct = computed(() => auth.isHelpdesk || auth.isTech);
+
+// เจ้าหน้าที่ฝ่าย IT เป็นผู้ลงมือแก้ จึงต้องปรับสถานะระหว่างทำงานได้
+// ส่วน Helpdesk ทำหน้าที่คัดกรองและส่งต่อ จึงเหลือแค่ปิดงาน โอนย้าย และยกเลิก
+const showStatusButtons = computed(() => auth.isTech);
 const isReadOnlyAdmin = computed(() => auth.isAdmin);
 const statusButtons = ['inprogress', 'pending', 'resolved', 'cancelled'];
 
@@ -170,6 +174,12 @@ async function doTransfer() {
   } finally {
     busy.value = false;
   }
+}
+
+// Helpdesk ยกเลิกตั๋วงาน (ใช้ปุ่มแยก เพราะไม่มีแถวปุ่มสถานะให้กด)
+async function cancelTicket() {
+  if (!window.confirm('ต้องการยกเลิกตั๋วงานนี้ใช่หรือไม่?')) return;
+  await setStatus('cancelled');
 }
 
 async function cancelOwn() {
@@ -347,7 +357,7 @@ function goBack() {
           </div>
 
           <template v-if="canAct">
-            <div class="status-grid">
+            <div v-if="showStatusButtons" class="status-grid">
               <button
                 v-for="s in statusButtons"
                 :key="s"
@@ -390,6 +400,17 @@ function goBack() {
               </select>
               <button class="btn-brand w-100" type="button" :disabled="busy" @click="doTransfer">ยืนยันการโอนย้าย</button>
             </div>
+
+            <button
+              v-if="!showStatusButtons && !['resolved', 'cancelled'].includes(t.status)"
+              class="btn-ghost w-100"
+              type="button"
+              style="color: var(--danger-ink)"
+              :disabled="busy"
+              @click="cancelTicket"
+            >
+              ยกเลิกตั๋วงาน
+            </button>
           </template>
 
           <template v-else-if="isReadOnlyAdmin">
