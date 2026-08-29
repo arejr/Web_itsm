@@ -3,7 +3,7 @@ const Category = require('../models/Category');
 const User = require('../models/User');
 const { serializeTicket } = require('../utils/serialize');
 
-const OPEN_STATUSES = ['new', 'assigned', 'inprogress', 'pending'];
+const OPEN_STATUSES = ['new', 'assigned', 'inprogress'];
 
 function startOfDay(d) {
   const x = new Date(d);

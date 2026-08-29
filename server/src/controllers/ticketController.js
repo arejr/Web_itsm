@@ -266,7 +266,7 @@ exports.updateStatus = async (req, res, next) => {
 
     const STATUS_LABEL = {
       new: 'ตั๋วใหม่', assigned: 'มอบหมายแล้ว', inprogress: 'กำลังดำเนินการ',
-      pending: 'รอดำเนินการ', resolved: 'แก้ไขสำเร็จ', cancelled: 'ยกเลิก'
+      resolved: 'แก้ไขสำเร็จ', cancelled: 'ยกเลิก'
     };
 
     ticket.status = status;

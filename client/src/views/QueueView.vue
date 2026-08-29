@@ -35,7 +35,7 @@ onMounted(async () => {
 
 watch(() => route.query.q, (q) => { search.value = q || ''; });
 
-const OPEN = ['new', 'assigned', 'inprogress', 'pending'];
+const OPEN = ['new', 'assigned', 'inprogress'];
 
 const tabs = computed(() => {
   const list = store.items;
@@ -43,7 +43,6 @@ const tabs = computed(() => {
     { key: 'all', label: 'ทั้งหมด', count: list.length },
     { key: 'new', label: 'รอคัดกรอง', count: list.filter((t) => t.status === 'new').length },
     { key: 'active', label: 'กำลังทำ', count: list.filter((t) => ['assigned', 'inprogress'].includes(t.status)).length },
-    { key: 'pending', label: 'รอดำเนินการ', count: list.filter((t) => t.status === 'pending').length },
     { key: 'closed', label: 'ปิดแล้ว', count: list.filter((t) => ['resolved', 'cancelled'].includes(t.status)).length }
   ];
 });

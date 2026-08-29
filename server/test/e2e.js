@@ -78,10 +78,14 @@ async function req(m, path, t, body) {
     !hdNotifs.items.some(n => n.ticketCode === created.j.code && n.tag !== 'ตั๋วใหม่'));
 
   // 3. เจ้าหน้าที่ IT อัปเดตสถานะ
-  for (const st of ['inprogress','pending','inprogress']) {
+  for (const st of ['inprogress','assigned','inprogress']) {
     const r = await req('PATCH', `/tickets/${tid}/status`, tech, { status: st });
     check(`อัปเดตสถานะเป็น ${st}`, r.status === 200 && r.j.status === st, r.j.message||'');
   }
+
+  const retired = await req('PATCH', `/tickets/${tid}/status`, tech, { status: 'pending' });
+  check('ตั้งสถานะที่เลิกใช้แล้ว (รอข้อมูล) ไม่ได้', retired.status === 400,
+    `${retired.status} ${retired.j.message || ''}`);
 
   // 4. แชทในตั๋วงาน
   const m1 = await req('POST', `/tickets/${tid}/messages`, tech, { text: 'สวัสดีครับ ขอทราบรุ่นของเมาส์ด้วยครับ' });
@@ -97,7 +101,7 @@ async function req(m, path, t, body) {
   check('Admin คัดกรอง/มอบหมายไม่ได้',
     (await req('PATCH', `/tickets/${tid}/triage`, admin, { priority: 'low' })).status === 403);
   check('Admin เปลี่ยนสถานะไม่ได้',
-    (await req('PATCH', `/tickets/${tid}/status`, admin, { status: 'pending' })).status === 403);
+    (await req('PATCH', `/tickets/${tid}/status`, admin, { status: 'inprogress' })).status === 403);
   check('Admin โอนย้ายงานไม่ได้',
     (await req('PATCH', `/tickets/${tid}/transfer`, admin, { assigneeId: thanawat._id })).status === 403);
   check('Admin ปิดงานไม่ได้',
@@ -108,7 +112,7 @@ async function req(m, path, t, body) {
   // เจ้าหน้าที่ IT ทำงานได้เฉพาะตั๋วที่ตนได้รับมอบหมาย
   const piyapong = await login('piyapong.w@company.co.th');
   check('ช่างคนอื่นเปลี่ยนสถานะตั๋วที่ไม่ใช่ของตนไม่ได้',
-    (await req('PATCH', `/tickets/${tid}/status`, piyapong, { status: 'pending' })).status === 403);
+    (await req('PATCH', `/tickets/${tid}/status`, piyapong, { status: 'inprogress' })).status === 403);
   check('ช่างคนอื่นปิดงานที่ไม่ใช่ของตนไม่ได้',
     (await req('PATCH', `/tickets/${tid}/resolve`, piyapong, { note: 'x' })).status === 403);
   check('ช่างคนอื่นยังดูรายละเอียดตั๋วได้',
@@ -123,7 +127,7 @@ async function req(m, path, t, body) {
   const tr = await req('PATCH', `/tickets/${tid}/transfer`, helpdesk, { assigneeId: siriporn._id });
   check('Helpdesk โอนย้ายตั๋วให้ทีมอื่นได้', tr.status === 200 && tr.j.assignee?._id === siriporn._id, tr.j.message||'');
   check('ช่างเดิมหมดสิทธิ์หลังตั๋วถูกโอนไปให้คนอื่น',
-    (await req('PATCH', `/tickets/${tid}/status`, tech, { status: 'pending' })).status === 403);
+    (await req('PATCH', `/tickets/${tid}/status`, tech, { status: 'inprogress' })).status === 403);
   check('ช่างเดิมตอบแชทไม่ได้หลังถูกโอนงาน',
     (await req('POST', `/tickets/${tid}/messages`, tech, { text: 'ขอตอบต่อ' })).status === 403);
   check('ช่างเดิมยังดูประวัติแชทได้หลังถูกโอนงาน',

@@ -42,7 +42,7 @@ const NAV_BY_ROLE = {
   ]
 };
 
-const OPEN = ['new', 'assigned', 'inprogress', 'pending'];
+const OPEN = ['new', 'assigned', 'inprogress'];
 
 function badgeCount(kind) {
   const list = tickets.items;

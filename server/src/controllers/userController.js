@@ -29,7 +29,7 @@ exports.technicians = async (req, res, next) => {
   try {
     const techs = await User.find({ role: { $in: ['tech', 'helpdesk'] }, active: true }).sort({ name: 1 });
     const loads = await Ticket.aggregate([
-      { $match: { status: { $in: ['assigned', 'inprogress', 'pending'] }, assignee: { $ne: null } } },
+      { $match: { status: { $in: ['assigned', 'inprogress'] }, assignee: { $ne: null } } },
       { $group: { _id: '$assignee', count: { $sum: 1 } } }
     ]);
     const map = Object.fromEntries(loads.map((l) => [String(l._id), l.count]));
@@ -116,7 +116,7 @@ exports.remove = async (req, res, next) => {
     }
     const open = await Ticket.countDocuments({
       assignee: req.params.id,
-      status: { $in: ['assigned', 'inprogress', 'pending'] }
+      status: { $in: ['assigned', 'inprogress'] }
     });
     if (open > 0) {
       return res.status(400).json({ message: `ผู้ใช้นี้ยังถือตั๋วงานค้างอยู่ ${open} รายการ กรุณาโอนย้ายงานก่อน` });

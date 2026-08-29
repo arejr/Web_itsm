@@ -12,7 +12,6 @@ export const STATUS = {
   new: { label: 'ตั๋วใหม่', fg: '#9a5b06', bg: '#fdf3e3', dot: '#d97706' },
   assigned: { label: 'มอบหมายแล้ว', fg: '#0f6a5f', bg: '#e4f1ee', dot: '#14776b' },
   inprogress: { label: 'กำลังดำเนินการ', fg: '#0f6a5f', bg: '#e4f1ee', dot: '#14776b' },
-  pending: { label: 'รอดำเนินการ', fg: '#8a5a08', bg: '#fff6e5', dot: '#8a5a08' },
   resolved: { label: 'แก้ไขสำเร็จ', fg: '#5a9c33', bg: '#eef6e4', dot: '#5a9c33' },
   cancelled: { label: 'ยกเลิก', fg: '#69737b', bg: '#f2f4f6', dot: '#9aa4ac' }
 };
@@ -20,7 +19,6 @@ export const STATUS_TRACK = [
   { key: 'new', label: 'รับเรื่อง' },
   { key: 'assigned', label: 'มอบหมาย' },
   { key: 'inprogress', label: 'ดำเนินการ' },
-  { key: 'pending', label: 'รอข้อมูล' },
   { key: 'resolved', label: 'ปิดงาน' }
 ];
 

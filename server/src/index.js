@@ -61,6 +61,20 @@ async function seedIfEmpty() {
 }
 
 /**
+ * ย้ายตั๋วที่ยังค้างสถานะ "รอข้อมูล" (pending) ที่เลิกใช้แล้ว ไปเป็น "กำลังดำเนินการ"
+ * ตั๋วเก่าในฐานข้อมูลจริงอาจยังถือสถานะนี้อยู่ ถ้าไม่ย้าย mongoose จะตีว่าค่าไม่ถูกต้อง
+ * ตอนบันทึกครั้งถัดไป ทำให้แก้ไขตั๋วนั้นไม่ได้เลย
+ */
+async function migrateRetiredStatus() {
+  const Ticket = require('./models/Ticket');
+  const r = await Ticket.updateMany(
+    { status: 'pending' },
+    { $set: { status: 'inprogress', statusReason: 'กำลังดำเนินการ' } }
+  );
+  if (r.modifiedCount) console.log(`[migrate] ย้ายตั๋วจากสถานะรอข้อมูลไปกำลังดำเนินการ ${r.modifiedCount} รายการ`);
+}
+
+/**
  * ต่อฐานข้อมูลแบบพยายามซ้ำ
  * แยกออกจากการเปิดเซิร์ฟเวอร์ เพื่อไม่ให้โปรเซสดับทันทีเมื่อฐานข้อมูลยังไม่พร้อม
  * (บน PaaS ฐานข้อมูลมักสตาร์ตช้ากว่าแอป และถ้าโปรเซสดับ healthcheck จะไม่มีวันผ่าน
@@ -75,6 +89,7 @@ async function connectWithRetry() {
     try {
       await connectDB();
       app.set('dbError', null);
+      await migrateRetiredStatus();
       await seedIfEmpty();
       return;
     } catch (err) {

@@ -13,10 +13,10 @@ const PRIORITY_SLA_MINUTES = {
   low: 4320            // 3 วัน
 };
 
-const STATUSES = ['new', 'assigned', 'inprogress', 'pending', 'resolved', 'cancelled'];
+const STATUSES = ['new', 'assigned', 'inprogress', 'resolved', 'cancelled'];
 
 // ลำดับความคืบหน้าที่ใช้วาดแถบสถานะในหน้ารายละเอียดตั๋ว
-const STATUS_TRACK = ['new', 'assigned', 'inprogress', 'pending', 'resolved'];
+const STATUS_TRACK = ['new', 'assigned', 'inprogress', 'resolved'];
 
 const CHANNELS = ['เว็บไซต์', 'โทรศัพท์', 'Walk-in', 'อีเมล', 'LINE / แชท'];
 

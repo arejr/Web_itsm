@@ -20,7 +20,6 @@ const dragging = ref(null);
 const COLUMNS = [
   { key: 'assigned', label: 'รอรับงาน', color: '#d97706', accepts: ['new', 'assigned'] },
   { key: 'inprogress', label: 'กำลังดำเนินการ', color: '#14776b', accepts: ['inprogress'] },
-  { key: 'pending', label: 'รอดำเนินการ', color: '#8a5a08', accepts: ['pending'] },
   { key: 'resolved', label: 'แก้ไขสำเร็จ', color: '#5a9c33', accepts: ['resolved'] }
 ];
 
