@@ -116,11 +116,17 @@ async function sendChat() {
 // ผู้ดูแลระบบดูตั๋วงานได้อย่างเดียว การจัดการงานเป็นหน้าที่ของ Helpdesk และเจ้าหน้าที่ IT
 const canAct = computed(() => auth.isHelpdesk || auth.isTech);
 
-// เจ้าหน้าที่ฝ่าย IT เป็นผู้ลงมือแก้ จึงต้องปรับสถานะระหว่างทำงานได้
-// ส่วน Helpdesk ทำหน้าที่คัดกรองและส่งต่อ จึงเหลือแค่ปิดงาน โอนย้าย และยกเลิก
+/**
+ * สิ่งที่แต่ละบทบาททำได้ในแผงจัดการตั๋วงาน
+ *   เจ้าหน้าที่ฝ่าย IT — รับงาน (กำลังดำเนินการ) แล้วบันทึกวิธีแก้เพื่อปิดงาน
+ *   IT Helpdesk       — ปิดงานที่แก้เบื้องต้นได้ · โอนย้ายให้ทีมอื่น · ยกเลิก
+ */
 const showStatusButtons = computed(() => auth.isTech);
+const showTransferButton = computed(() => auth.isHelpdesk);
+const showCancelButton = computed(() => auth.isHelpdesk);
 const isReadOnlyAdmin = computed(() => auth.isAdmin);
-const statusButtons = ['inprogress', 'pending', 'resolved', 'cancelled'];
+// เจ้าหน้าที่ IT กดรับงานอย่างเดียว ส่วนการปิดงานใช้ปุ่มบันทึกและปิดตั๋วงานที่บังคับให้กรอกวิธีแก้
+const statusButtons = ['inprogress'];
 
 const trackIndex = computed(() => STATUS_TRACK.findIndex((s) => s.key === t.value?.status));
 
@@ -387,11 +393,11 @@ function goBack() {
               บันทึกและปิดตั๋วงาน
             </button>
 
-            <button class="btn-ghost w-100" type="button" @click="showTransfer = !showTransfer">
+            <button v-if="showTransferButton" class="btn-ghost w-100" type="button" @click="showTransfer = !showTransfer">
               โอนย้ายตั๋วให้ทีมอื่น
             </button>
 
-            <div v-if="showTransfer" class="transfer-box">
+            <div v-if="showTransfer && showTransferButton" class="transfer-box">
               <select v-model="transferTo" class="input input--sm">
                 <option value="">— เลือกเจ้าหน้าที่ปลายทาง —</option>
                 <option v-for="tech in meta.technicians" :key="tech._id" :value="tech._id">
@@ -402,7 +408,7 @@ function goBack() {
             </div>
 
             <button
-              v-if="!showStatusButtons && !['resolved', 'cancelled'].includes(t.status)"
+              v-if="showCancelButton && !['resolved', 'cancelled'].includes(t.status)"
               class="btn-ghost w-100"
               type="button"
               style="color: var(--danger-ink)"
