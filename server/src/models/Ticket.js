@@ -48,7 +48,7 @@ const ticketSchema = new mongoose.Schema(
     group: { type: String, default: '' },
 
     // ข้อมูลเชิงเทคนิคของ Incident record
-    incidentType: { type: String, default: 'User Service Restoration' },
+    incidentType: { type: String, default: 'Incident' },
     service: { type: String, default: '' },
     opCategory: { type: String, default: 'Failure' },
     productCategory: { type: String, default: '' },

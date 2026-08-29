@@ -262,7 +262,14 @@ function goBack() {
             <h1 class="record__title">{{ t.title }}</h1>
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <span class="record__type">
-                <span class="record__type-icon"></span>{{ t.incidentType }}
+                <svg class="record__type-icon" viewBox="0 0 16 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M2.6 1.4h6.6l4.2 4.2v13a1 1 0 0 1-1 1H2.6a1 1 0 0 1-1-1V2.4a1 1 0 0 1 1-1Z"
+                    fill="#fff" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"
+                  />
+                  <path d="M9.2 1.4v4.2h4.2" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+                  <path d="M4.4 9.4h7M4.4 12.4h7M4.4 15.4h4.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                </svg>{{ t.incidentType }}
               </span>
               <span class="mono record__code">{{ t.code }}</span>
               <span class="pill" :style="{ background: prio(t.priority).bg, color: prio(t.priority).fg }">
@@ -579,7 +586,7 @@ function goBack() {
 .record__head { padding: 20px 24px 18px; display: flex; flex-direction: column; gap: 11px; }
 .record__title { font: 600 25px var(--font-th); letter-spacing: -0.4px; line-height: 1.3; margin: 0; }
 .record__type { display: flex; align-items: center; gap: 7px; font: 400 12.5px var(--font-th); color: var(--muted); }
-.record__type-icon { width: 15px; height: 18px; border-radius: 2px; border: 1.5px solid var(--muted-2); display: inline-block; }
+.record__type-icon { width: 15px; height: 18px; flex: none; color: var(--muted-2); }
 .record__code { font: 500 13px var(--font-mono); color: var(--ink-strong); letter-spacing: 0.3px; }
 .record__updated { font: 400 11.5px var(--font-th); color: var(--muted-3); }
 

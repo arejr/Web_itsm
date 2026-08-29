@@ -61,17 +61,28 @@ async function seedIfEmpty() {
 }
 
 /**
- * ย้ายตั๋วที่ยังค้างสถานะ "รอข้อมูล" (pending) ที่เลิกใช้แล้ว ไปเป็น "กำลังดำเนินการ"
- * ตั๋วเก่าในฐานข้อมูลจริงอาจยังถือสถานะนี้อยู่ ถ้าไม่ย้าย mongoose จะตีว่าค่าไม่ถูกต้อง
- * ตอนบันทึกครั้งถัดไป ทำให้แก้ไขตั๋วนั้นไม่ได้เลย
+ * ปรับข้อมูลเก่าให้เข้ากับค่าที่ระบบใช้อยู่ตอนนี้ — ทำทุกครั้งที่ต่อฐานข้อมูลสำเร็จ
+ * ตั๋วเก่าบนฐานข้อมูลจริงยังถือค่าเดิมอยู่ ถ้าไม่ปรับ หน้าเว็บจะแสดงคำเก่าปนกัน
+ * และสถานะที่เลิกใช้แล้วจะทำให้ mongoose ตีว่าค่าไม่ถูกต้องตอนบันทึกครั้งถัดไป
  */
-async function migrateRetiredStatus() {
+async function runMigrations() {
   const Ticket = require('./models/Ticket');
-  const r = await Ticket.updateMany(
+
+  const status = await Ticket.updateMany(
     { status: 'pending' },
     { $set: { status: 'inprogress', statusReason: 'กำลังดำเนินการ' } }
   );
-  if (r.modifiedCount) console.log(`[migrate] ย้ายตั๋วจากสถานะรอข้อมูลไปกำลังดำเนินการ ${r.modifiedCount} รายการ`);
+  if (status.modifiedCount) {
+    console.log(`[migrate] ย้ายตั๋วจากสถานะรอข้อมูลไปกำลังดำเนินการ ${status.modifiedCount} รายการ`);
+  }
+
+  const type = await Ticket.updateMany(
+    { incidentType: 'User Service Restoration' },
+    { $set: { incidentType: 'Incident' } }
+  );
+  if (type.modifiedCount) {
+    console.log(`[migrate] เปลี่ยนประเภทเหตุการณ์เป็น Incident ${type.modifiedCount} รายการ`);
+  }
 }
 
 /**
@@ -89,7 +100,7 @@ async function connectWithRetry() {
     try {
       await connectDB();
       app.set('dbError', null);
-      await migrateRetiredStatus();
+      await runMigrations();
       await seedIfEmpty();
       return;
     } catch (err) {
