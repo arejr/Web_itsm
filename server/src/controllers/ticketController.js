@@ -105,23 +105,16 @@ exports.get = async (req, res, next) => {
 // POST /api/tickets — พนักงานแจ้งปัญหา หรือ Helpdesk ออกตั๋วแทน
 exports.create = async (req, res, next) => {
   try {
-    const {
-      title, description, categoryId, priority, location, asset,
-      channel, requesterName, requesterDept, requesterId,
-      assigneeId, service, isDraft
-    } = req.body;
+    const { title, description, categoryId, priority, location, asset, service, isDraft } = req.body;
 
     if (!title || !String(title).trim()) {
       return res.status(400).json({ message: 'กรุณาระบุชื่อปัญหา' });
     }
 
     const category = categoryId ? await Category.findById(categoryId) : await Category.findOne({ key: 'other' });
-    const onBehalf = ['helpdesk', 'admin'].includes(req.user.role) && (requesterName || requesterId);
 
-    let requester = req.user;
-    if (onBehalf && requesterId) requester = (await User.findById(requesterId)) || null;
-    else if (onBehalf) requester = null;
-
+    // แจ้งปัญหาได้เฉพาะพนักงานบริษัท ผู้แจ้งจึงเป็นผู้ที่ล็อกอินอยู่เสมอ
+    const requester = req.user;
     const prio = priority || 'medium';
     const ticket = new Ticket({
       code: await nextTicketCode(),
@@ -131,19 +124,19 @@ exports.create = async (req, res, next) => {
       priority: prio,
       status: 'new',
       statusReason: 'รอคัดกรอง',
-      requester: requester?._id,
-      requesterName: requester?.name || requesterName || 'ไม่ระบุชื่อผู้แจ้ง',
-      requesterDept: requester?.department || requesterDept || 'ไม่ระบุแผนก',
-      requesterEmail: requester?.email || '',
-      requesterPhone: requester?.phone || '',
-      contact: requester?.contact || (onBehalf ? 'บันทึกโดย Helpdesk' : ''),
-      company: requester?.company || 'สำนักงานใหญ่',
-      orgCode: requester?.orgCode || '',
+      requester: requester._id,
+      requesterName: requester.name,
+      requesterDept: requester.department || 'ไม่ระบุแผนก',
+      requesterEmail: requester.email || '',
+      requesterPhone: requester.phone || '',
+      contact: requester.contact || '',
+      company: requester.company || 'สำนักงานใหญ่',
+      orgCode: requester.orgCode || '',
       location: location || '',
       asset: asset || '',
       service: service || category?.label || '',
       productCategory: category ? `${category.label}` : '',
-      channel: channel || 'เว็บไซต์',
+      channel: 'เว็บไซต์',
       slaDueAt: slaDueFrom(prio),
       isDraft: !!isDraft
     });
@@ -160,48 +153,23 @@ exports.create = async (req, res, next) => {
 
     pushTimeline(ticket, 'ผู้ใช้แจ้งปัญหาเข้าระบบ', { name: ticket.requesterName }, 'info');
 
-    // มอบหมายทันทีเฉพาะกรณีที่ผู้ออกตั๋วระบุผู้รับผิดชอบมาพร้อมกัน
-    // นอกนั้นตั๋วจะเข้าคิวคัดกรองให้ Helpdesk มอบหมายเอง
-    let assignedUser = null;
-    if (assigneeId) assignedUser = await User.findById(assigneeId);
-
-    if (assignedUser) {
-      ticket.assignee = assignedUser._id;
-      ticket.group = assignedUser.group || category?.defaultGroup || '';
-      ticket.status = 'assigned';
-      ticket.statusReason = 'รอเจ้าหน้าที่รับงาน';
-      pushTimeline(ticket, `มอบหมายให้ ${assignedUser.name}`, req.user, 'assign');
-    }
-
     await ticket.save();
     await ticket.populate(POPULATE);
 
     const io = req.app.get('io');
     io?.emit('ticket:created', serializeTicket(ticket));
 
-    // แจ้งเตือนทีมคัดกรอง หรือผู้รับผิดชอบที่ถูกมอบหมาย
-    if (assignedUser) {
-      await notify(io, {
-        userIds: [assignedUser._id],
-        tag: 'มอบหมาย',
-        title: 'คุณได้รับมอบหมายตั๋วงานใหม่',
-        body: `${ticket.code} · ${ticket.title}`,
-        ticket: ticket._id,
-        ticketCode: ticket.code
-      });
-    } else {
-      // ตั๋วที่ยังไม่มีผู้รับผิดชอบเป็นหน้าที่ของ Helpdesk ในการคัดกรอง
-      // จึงแจ้งเฉพาะ Helpdesk — บทบาทอื่นจะได้รับแจ้งเตือนเฉพาะตั๋วที่ตนเกี่ยวข้องด้วย
-      const desk = await User.find({ role: 'helpdesk', active: true }).select('_id');
-      await notify(io, {
-        userIds: desk.map((u) => u._id),
-        tag: 'ตั๋วใหม่',
-        title: 'มีตั๋วแจ้งปัญหาเข้าใหม่รอคัดกรอง',
-        body: `${ticket.code} · ${ticket.title}`,
-        ticket: ticket._id,
-        ticketCode: ticket.code
-      });
-    }
+    // ตั๋วที่แจ้งเข้ามาใหม่เป็นหน้าที่ของ Helpdesk ในการคัดกรองและมอบหมาย
+    // บทบาทอื่นจะได้รับแจ้งเตือนเฉพาะตั๋วที่ตนเกี่ยวข้องด้วย
+    const desk = await User.find({ role: 'helpdesk', active: true }).select('_id');
+    await notify(io, {
+      userIds: desk.map((u) => u._id),
+      tag: 'ตั๋วใหม่',
+      title: 'มีตั๋วแจ้งปัญหาเข้าใหม่รอคัดกรอง',
+      body: `${ticket.code} · ${ticket.title}`,
+      ticket: ticket._id,
+      ticketCode: ticket.code
+    });
 
     res.status(201).json(serializeTicket(ticket));
   } catch (err) {

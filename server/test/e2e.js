@@ -144,17 +144,9 @@ async function req(m, path, t, body) {
 
   // 7. แจ้งปัญหาได้เฉพาะพนักงานบริษัท
   const staffCreate = { title: 'ทีม IT ไม่ควรแจ้งปัญหาเองได้', description: 'x' };
+  check('Helpdesk แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', helpdesk, staffCreate)).status === 403);
   check('เจ้าหน้าที่ IT แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', tech, staffCreate)).status === 403);
   check('Admin แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', admin, staffCreate)).status === 403);
-
-  // Helpdesk ออกตั๋วแทนผู้ที่แจ้งเข้ามาทางโทรศัพท์ / Walk-in
-  const onBehalf = await req('POST', '/tickets', helpdesk, {
-    title: 'ทดสอบ Helpdesk ออกตั๋วแทนผู้แจ้ง', description: 'ผู้ใช้โทรแจ้ง',
-    requesterName: 'สมหญิง ทดสอบ', requesterDept: 'ฝ่ายจัดซื้อ', channel: 'โทรศัพท์'
-  });
-  check('Helpdesk ออกตั๋วแทนผู้แจ้งได้', onBehalf.status === 201, onBehalf.j.message || '');
-  check('บันทึกชื่อผู้แจ้งที่ระบุเอง', onBehalf.j.requesterName === 'สมหญิง ทดสอบ', onBehalf.j.requesterName);
-  check('บันทึกช่องทางที่รับแจ้ง', onBehalf.j.channel === 'โทรศัพท์', onBehalf.j.channel);
 
   const byEmp = await req('POST', '/tickets', emp, { title: 'พนักงานแจ้งปัญหาได้', description: 'x' });
   check('พนักงานบริษัทแจ้งปัญหาได้', byEmp.status === 201, byEmp.j.message || '');

@@ -110,7 +110,6 @@ npm run dev:client
 - ตรวจสอบตั๋วเข้าใหม่ (แถวสีครีม) พร้อมแผงคัดกรองด้านข้าง
 - จัดหมวดหมู่ปัญหา (Hardware / Software / Network / บัญชี-สิทธิ์ / อื่น ๆ)
 - กำหนดระดับความสำคัญ Low / Medium / High / Critical — ระบบคำนวณกำหนดเสร็จใหม่ทันที
-- โหมด "ออกตั๋วเอง" สำหรับรับแจ้งทางโทรศัพท์ / Walk-in / อีเมล / LINE แล้วออกตั๋วแทนผู้แจ้ง
 
 **3.2 การจัดสรรและมอบหมายงาน**
 - มอบหมายตั๋วให้เจ้าหน้าที่ พร้อมแสดงภาระงานปัจจุบันของแต่ละคนประกอบการตัดสินใจ
@@ -120,10 +119,8 @@ npm run dev:client
 - ปุ่ม "ปิดเอง" สำหรับแก้ปัญหาพื้นฐานและปิดตั๋วได้ทันทีพร้อมบันทึกวิธีแก้
 - แชทเรียลไทม์กับผู้แจ้งเพื่อสอบถามข้อมูลเพิ่มเติม
 
-> **การแจ้งปัญหาด้วยตนเองทำได้เฉพาะพนักงานบริษัท** — ปุ่ม "+ แจ้งปัญหาใหม่" แสดงเฉพาะบทบาทนี้
-> ส่วน **IT Helpdesk ออกตั๋วแทนผู้แจ้ง**ได้จากเมนู "ออกตั๋วเอง" ในแถบนำทาง
-> สำหรับกรณีที่ผู้ใช้แจ้งเข้ามาทางโทรศัพท์ Walk-in อีเมล หรือ LINE
-> เจ้าหน้าที่ฝ่าย IT และผู้ดูแลระบบเปิดตั๋วไม่ได้ (จำกัดสิทธิ์ที่ฝั่งเซิร์ฟเวอร์ด้วย)
+> **การแจ้งปัญหาทำได้เฉพาะพนักงานบริษัทเท่านั้น** — ทีม IT มีหน้าที่รับเรื่องและแก้ไข ไม่ใช่ผู้แจ้ง
+> ปุ่ม "+ แจ้งปัญหาใหม่" จึงแสดงเฉพาะบทบาทพนักงาน และ `POST /api/tickets` จำกัดสิทธิ์ไว้ที่ฝั่งเซิร์ฟเวอร์ด้วย
 
 ### 4. พนักงานบริษัท (Employee)
 
@@ -178,7 +175,7 @@ projectitsm/
     └── src/
         ├── assets/theme.css    Design tokens จากไฟล์ดีไซน์
         ├── components/         AppShell · AppSidebar · NotificationBell · ฯลฯ
-        ├── views/              Login · Dashboard · Queue · Board · Users · IssueTicket
+        ├── views/              Login · Dashboard · Queue · Board · Users
         │                       Settings · KnowledgeBase · NewTicket
         │                       MyTickets · TicketDetail · Profile
         ├── stores/             Pinia: auth · tickets · meta · notifications · ui
@@ -200,7 +197,7 @@ projectitsm/
 | POST · PATCH · DELETE | `/api/users/:id` | admin | จัดการสมาชิก |
 | PATCH | `/api/users/:id/status` | admin | ระงับ / เปิดใช้งานบัญชี |
 | GET | `/api/tickets` | ล็อกอิน | รายการตั๋ว (ขอบเขตตามบทบาท) |
-| POST | `/api/tickets` | employee, helpdesk | แจ้งปัญหาใหม่ / ออกตั๋วแทนผู้แจ้ง (multipart รองรับไฟล์แนบ) |
+| POST | `/api/tickets` | employee | แจ้งปัญหาใหม่ (multipart รองรับไฟล์แนบ) |
 | GET | `/api/tickets/:id` | ล็อกอิน | รายละเอียด (รับทั้ง `_id` และเลขตั๋ว) |
 | PATCH | `/api/tickets/:id/triage` | admin, helpdesk | คัดกรอง + มอบหมาย |
 | PATCH | `/api/tickets/:id/status` | ล็อกอิน | อัปเดตสถานะ |

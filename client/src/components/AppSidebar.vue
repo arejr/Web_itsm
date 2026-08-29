@@ -25,7 +25,6 @@ const NAV_BY_ROLE = {
   ],
   helpdesk: [
     { name: 'dashboard', label: 'แดชบอร์ดภาพรวม', en: 'Dashboard' },
-    { name: 'issue-ticket', label: 'ออกตั๋วเอง', en: 'Issue a Ticket' },
     { name: 'queue', label: 'คิวคัดกรอง', en: 'Triage Queue', badge: 'new' },
     { name: 'board', label: 'ภาระงานทีม', en: 'Team Workload' },
     { name: 'kb', label: 'ฐานความรู้', en: 'Knowledge Base' }
