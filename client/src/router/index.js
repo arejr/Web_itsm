@@ -16,6 +16,9 @@ const routes = [
   { path: '/settings', name: 'settings', component: () => import('@/views/SettingsView.vue'),
     meta: { roles: ['admin'], title: 'ตั้งค่าระบบ', sub: 'หมวดหมู่ปัญหา ระดับความรุนแรง และประกาศ' } },
 
+  { path: '/issue', name: 'issue-ticket', component: () => import('@/views/IssueTicketView.vue'),
+    meta: { roles: ['helpdesk'], title: 'ออกตั๋วเอง', sub: 'บันทึกเรื่องแทนผู้ที่แจ้งเข้ามาทางโทรศัพท์ Walk-in อีเมล หรือ LINE' } },
+
   { path: '/queue', name: 'queue', component: () => import('@/views/QueueView.vue'),
     meta: { roles: ['admin', 'helpdesk', 'tech'], title: 'คิวตั๋วงาน', sub: 'ตรวจสอบ คัดกรอง จัดหมวดหมู่ และมอบหมายงาน' } },
 

@@ -121,7 +121,7 @@ npm run dev:client
 - แชทเรียลไทม์กับผู้แจ้งเพื่อสอบถามข้อมูลเพิ่มเติม
 
 > **การแจ้งปัญหาด้วยตนเองทำได้เฉพาะพนักงานบริษัท** — ปุ่ม "+ แจ้งปัญหาใหม่" แสดงเฉพาะบทบาทนี้
-> ส่วน **IT Helpdesk ออกตั๋วแทนผู้แจ้ง**ได้จากโหมด "ออกตั๋วเอง" ในหน้าคิวคัดกรอง
+> ส่วน **IT Helpdesk ออกตั๋วแทนผู้แจ้ง**ได้จากเมนู "ออกตั๋วเอง" ในแถบนำทาง
 > สำหรับกรณีที่ผู้ใช้แจ้งเข้ามาทางโทรศัพท์ Walk-in อีเมล หรือ LINE
 > เจ้าหน้าที่ฝ่าย IT และผู้ดูแลระบบเปิดตั๋วไม่ได้ (จำกัดสิทธิ์ที่ฝั่งเซิร์ฟเวอร์ด้วย)
 
@@ -178,7 +178,7 @@ projectitsm/
     └── src/
         ├── assets/theme.css    Design tokens จากไฟล์ดีไซน์
         ├── components/         AppShell · AppSidebar · NotificationBell · ฯลฯ
-        ├── views/              Login · Dashboard · Queue · Board · Users
+        ├── views/              Login · Dashboard · Queue · Board · Users · IssueTicket
         │                       Settings · KnowledgeBase · NewTicket
         │                       MyTickets · TicketDetail · Profile
         ├── stores/             Pinia: auth · tickets · meta · notifications · ui

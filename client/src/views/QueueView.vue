@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useMetaStore } from '@/stores/meta';
 import { useTicketStore } from '@/stores/tickets';
 import { useUiStore } from '@/stores/ui';
-import { PRIORITY, PRIORITY_ORDER, CHANNELS, prio } from '@/services/lookups';
+import { PRIORITY, PRIORITY_ORDER, prio } from '@/services/lookups';
 import EmptyState from '@/components/EmptyState.vue';
 import LoadingRows from '@/components/LoadingRows.vue';
 
@@ -19,27 +19,17 @@ const ui = useUiStore();
 
 const tab = ref('all');
 const search = ref(route.query.q || '');
-const panelMode = ref('triage'); // triage | create
 const busy = ref(false);
 
 /* ---------- แผงคัดกรอง ---------- */
 const selectedId = ref(null);
 const triage = ref({ categoryId: '', priority: 'medium', assigneeId: '' });
 
-/* ---------- แผงออกตั๋วเอง ---------- */
-const draft = ref({
-  channel: 'โทรศัพท์', requesterName: '', requesterDept: '', title: '', description: '',
-  categoryId: '', priority: 'medium', assigneeId: '', location: ''
-});
-
 onMounted(async () => {
   await meta.load();
   await meta.loadTechnicians();
   await store.load();
-  if (meta.categories.length) {
-    triage.value.categoryId = meta.categories[0]._id;
-    draft.value.categoryId = meta.categories[0]._id;
-  }
+  if (meta.categories.length) triage.value.categoryId = meta.categories[0]._id;
   pickFirstNew();
 });
 
@@ -90,7 +80,6 @@ function pickFirstNew() {
 watch(newTickets, pickFirstNew);
 
 function selectForTriage(t) {
-  panelMode.value = 'triage';
   selectedId.value = t._id;
   triage.value.categoryId = t.category?._id || meta.categories[0]?._id || '';
   triage.value.priority = t.priority || 'medium';
@@ -148,33 +137,6 @@ async function closeMyself() {
   }
 }
 
-const createHint = computed(() => {
-  const tech = meta.technicians.find((x) => x._id === draft.value.assigneeId);
-  return `ตั๋วจะถูกออกในนามผู้แจ้ง โดยระบุช่องทาง “${draft.value.channel}”${tech ? ` และมอบหมายให้ ${tech.name}` : ''}`;
-});
-
-async function createTicket() {
-  if (!draft.value.title.trim()) {
-    ui.error('กรุณาระบุเรื่องที่แจ้ง');
-    return;
-  }
-  busy.value = true;
-  try {
-    const { data } = await api.post('/tickets', draft.value);
-    store.upsert(data);
-    ui.success(`ออกตั๋ว ${data.code} เรียบร้อยแล้ว`);
-    draft.value.title = '';
-    draft.value.description = '';
-    draft.value.requesterName = '';
-    draft.value.requesterDept = '';
-    draft.value.location = '';
-    router.push({ name: 'ticket-detail', params: { id: data._id } });
-  } catch (err) {
-    ui.error(errMsg(err));
-  } finally {
-    busy.value = false;
-  }
-}
 </script>
 
 <template>
@@ -238,19 +200,8 @@ async function createTicket() {
       </div>
     </div>
 
-    <!-- แผงด้านข้าง: คัดกรอง / ออกตั๋วเอง -->
+    <!-- แผงด้านข้าง: คัดกรองตั๋วเข้าใหม่ -->
     <div v-if="auth.isHelpdesk" class="card-surface queue-panel">
-      <div class="mode-switch">
-        <button type="button" :class="{ 'is-active': panelMode === 'triage' }" @click="panelMode = 'triage'">
-          คัดกรองตั๋วเข้า
-        </button>
-        <button type="button" :class="{ 'is-active': panelMode === 'create' }" @click="panelMode = 'create'">
-          ออกตั๋วเอง
-        </button>
-      </div>
-
-      <!-- โหมดคัดกรอง -->
-      <template v-if="panelMode === 'triage'">
         <div class="card-title-xs">ตั๋วเข้าใหม่ที่รอคัดกรอง ({{ newTickets.length }})</div>
 
         <EmptyState v-if="!selected" title="ไม่มีตั๋วรอคัดกรอง" sub="ตั๋วใหม่จะปรากฏที่นี่ทันทีที่มีผู้แจ้งเข้ามา" />
@@ -338,92 +289,6 @@ async function createTicket() {
           </div>
           <p class="panel-hint">{{ triageHint }}</p>
         </template>
-      </template>
-
-      <!-- โหมดออกตั๋วเอง -->
-      <template v-else>
-        <div class="d-flex flex-column gap-2">
-          <span class="section-label">ช่องทางที่รับแจ้ง</span>
-          <div class="d-flex flex-wrap gap-1">
-            <button
-              v-for="c in CHANNELS"
-              :key="c"
-              type="button"
-              class="chip"
-              :class="{ 'is-active': draft.channel === c }"
-              @click="draft.channel = c"
-            >
-              {{ c }}
-            </button>
-          </div>
-        </div>
-
-        <div class="d-flex flex-column gap-2">
-          <span class="section-label">ผู้แจ้งปัญหา</span>
-          <input v-model="draft.requesterName" class="input input--sm" placeholder="ชื่อ–สกุล ผู้แจ้ง" />
-          <input v-model="draft.requesterDept" class="input input--sm" placeholder="แผนก / หน่วยงาน" />
-        </div>
-
-        <div class="d-flex flex-column gap-2">
-          <span class="section-label">เรื่องที่แจ้ง</span>
-          <input v-model="draft.title" class="input input--sm" placeholder="สรุปอาการสั้น ๆ" />
-          <textarea v-model="draft.description" class="input input--sm" rows="3" placeholder="รายละเอียดที่สอบถามจากผู้แจ้ง"></textarea>
-          <input v-model="draft.location" class="input input--sm" placeholder="สถานที่เกิดเหตุ (อาคาร / ชั้น / ห้อง)" />
-        </div>
-
-        <div class="d-flex flex-column gap-2">
-          <span class="section-label">หมวดหมู่ &amp; ความสำคัญ</span>
-          <div class="d-flex flex-wrap gap-1">
-            <button
-              v-for="c in meta.categories"
-              :key="c._id"
-              type="button"
-              class="chip"
-              :class="{ 'is-active': draft.categoryId === c._id }"
-              @click="draft.categoryId = c._id"
-            >
-              {{ c.label }}
-            </button>
-          </div>
-          <div class="prio-grid">
-            <button
-              v-for="p in PRIORITY_ORDER"
-              :key="p"
-              type="button"
-              class="prio-btn"
-              :class="{ 'is-active': draft.priority === p }"
-              :style="draft.priority === p ? { background: PRIORITY[p].bg, color: PRIORITY[p].fg, borderColor: PRIORITY[p].dot } : {}"
-              @click="draft.priority = p"
-            >
-              {{ PRIORITY[p].label }}
-            </button>
-          </div>
-        </div>
-
-        <div class="d-flex flex-column gap-2">
-          <span class="section-label">มอบหมายงานให้</span>
-          <button
-            v-for="tech in meta.technicians"
-            :key="tech._id"
-            type="button"
-            class="tech-btn"
-            :class="{ 'is-active': draft.assigneeId === tech._id }"
-            @click="draft.assigneeId = draft.assigneeId === tech._id ? '' : tech._id"
-          >
-            <span class="avatar avatar--sm">{{ tech.initial }}</span>
-            <span class="d-flex flex-column flex-fill min-w-0 text-start">
-              <span class="tech-btn__name text-truncate">{{ tech.name }}</span>
-              <span class="tech-btn__skill text-truncate">{{ tech.skill }}</span>
-            </span>
-            <span class="pill pill--mono" style="background: #eef6e4; color: #4a7f22">{{ tech.load }} งาน</span>
-          </button>
-        </div>
-
-        <button class="btn-brand w-100 py-3" type="button" :disabled="busy" @click="createTicket">
-          ออกตั๋วงานและมอบหมาย
-        </button>
-        <p class="panel-hint">{{ createHint }}</p>
-      </template>
     </div>
   </div>
 </template>
@@ -479,16 +344,6 @@ async function createTicket() {
   position: sticky; top: 88px;
   max-height: calc(100vh - 110px); overflow-y: auto;
 }
-.mode-switch {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
-  padding: 4px; border-radius: 9px; background: var(--surface-3);
-}
-.mode-switch button {
-  padding: 8px 6px; border-radius: 7px; border: 0; cursor: pointer;
-  font: 500 12px var(--font-th); background: transparent; color: var(--muted);
-}
-.mode-switch button.is-active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(16, 24, 32, 0.14); }
-
 .panel-ticket {
   padding: 12px 13px; border-radius: 9px;
   background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07);
