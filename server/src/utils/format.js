@@ -8,7 +8,7 @@ function thaiDateTime(date) {
   return `${d.getDate()} ${TH_MONTHS[d.getMonth()]} ${hh}:${mm}`;
 }
 
-// แปลงจำนวนนาทีเป็นข้อความ SLA เช่น "เหลือ 46 นาที" / "เกินกำหนด 2 ชม."
+// แปลงจำนวนนาทีเป็นข้อความกำหนดเสร็จ เช่น "เหลือ 46 นาที" / "เกินกำหนด 2 ชม."
 function slaText(minutes, status) {
   if (minutes === null || minutes === undefined) return '—';
   if (status === 'resolved') return minutes >= 0 ? 'ปิดตรงเวลา' : 'ปิดเกินกำหนด';

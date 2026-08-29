@@ -121,7 +121,7 @@ async function removeAnn(a) {
           <span class="cat-row__label">{{ c.label }}</span>
           <span class="cat-row__sub text-truncate">{{ c.description || '—' }}</span>
         </div>
-        <span class="mono cat-row__sla">SLA {{ c.slaHours }} ชม.</span>
+        <span class="mono cat-row__sla">กำหนดเสร็จ {{ c.slaHours }} ชม.</span>
         <button class="btn-ghost btn-xs" type="button" @click="startCat(c)">แก้ไข</button>
         <button class="btn-ghost btn-xs" style="color: var(--danger-ink)" type="button" @click="removeCat(c)">ลบ</button>
       </div>
@@ -133,7 +133,7 @@ async function removeAnn(a) {
         <input v-model="catForm.description" class="input input--sm" placeholder="คำอธิบายสั้น ๆ" />
         <div class="d-flex gap-2">
           <input v-model="catForm.color" class="input input--sm color-input" type="color" />
-          <input v-model.number="catForm.slaHours" class="input input--sm" type="number" min="1" placeholder="SLA (ชม.)" />
+          <input v-model.number="catForm.slaHours" class="input input--sm" type="number" min="1" placeholder="กำหนดเสร็จ (ชม.)" />
         </div>
         <input v-model="catForm.defaultGroup" class="input input--sm" placeholder="กลุ่มงานที่รับผิดชอบ" />
         <div class="d-flex gap-2">

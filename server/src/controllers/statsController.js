@@ -40,7 +40,7 @@ exports.dashboard = async (req, res, next) => {
         )
       : 0;
 
-    // เกิน SLA ในเดือนนี้
+    // เกินกำหนดเสร็จในเดือนนี้
     const breached = allTickets.filter((t) => {
       if (!t.slaDueAt) return false;
       const ref = t.resolvedAt || now;
@@ -76,7 +76,7 @@ exports.dashboard = async (req, res, next) => {
       percent: Math.round(((countByCat[String(c._id)] || 0) / totalAll) * 100)
     }));
 
-    // ตั๋วงานที่เสี่ยงเกิน SLA
+    // ตั๋วงานที่ใกล้เกินกำหนด
     const riskDocs = await Ticket.find({ ...scope, status: { $in: OPEN_STATUSES } })
       .populate([
         { path: 'category', select: 'key label color' },

@@ -332,7 +332,7 @@ function goBack() {
             </div>
             <div><span class="meta-label">กลุ่มงานที่ดูแล</span><span class="meta-value">{{ t.group || '—' }}</span></div>
             <div>
-              <span class="meta-label">กำหนดเสร็จตาม SLA</span>
+              <span class="meta-label">กำหนดเสร็จ</span>
               <span class="meta-value mono" :style="{ color: t.slaRisk ? '#a12626' : '#22292f' }">
                 {{ t.slaText }} <small class="text-muted-3">({{ thDateTime(t.slaDueAt) }})</small>
               </span>
@@ -435,7 +435,7 @@ function goBack() {
             <div class="admin-state">
               <div><span class="meta-label">สถานะปัจจุบัน</span><span class="meta-value" :style="{ color: stat(t.status).fg }">{{ stat(t.status).label }}</span></div>
               <div><span class="meta-label">ผู้รับผิดชอบ</span><span class="meta-value">{{ t.assigneeName }}</span></div>
-              <div><span class="meta-label">กำหนดเสร็จตาม SLA</span><span class="meta-value mono" :style="{ color: t.slaRisk ? '#a12626' : '#22292f' }">{{ t.slaText }}</span></div>
+              <div><span class="meta-label">กำหนดเสร็จ</span><span class="meta-value mono" :style="{ color: t.slaRisk ? '#a12626' : '#22292f' }">{{ t.slaText }}</span></div>
             </div>
             <div v-if="t.resolutionNote" class="resolution-box">
               <span class="meta-label">วิธีแก้ปัญหาที่บันทึกไว้</span>

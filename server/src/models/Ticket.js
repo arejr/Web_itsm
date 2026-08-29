@@ -59,7 +59,7 @@ const ticketSchema = new mongoose.Schema(
     attachments: [attachmentSchema],
     timeline: [timelineSchema],
 
-    // SLA
+    // กำหนดเสร็จ
     slaDueAt: { type: Date },
     resolvedAt: { type: Date },
     closedAt: { type: Date },
@@ -75,7 +75,7 @@ const ticketSchema = new mongoose.Schema(
 
 ticketSchema.index({ title: 'text', description: 'text', code: 'text', requesterName: 'text' });
 
-// เหลือเวลาตาม SLA (นาที) — ค่าลบคือเกินกำหนดแล้ว
+// เวลาที่เหลือก่อนถึงกำหนดเสร็จ (นาที) — ค่าลบคือเกินกำหนดแล้ว
 ticketSchema.virtual('slaRemainingMinutes').get(function () {
   if (!this.slaDueAt) return null;
   const ref = this.resolvedAt || new Date();
@@ -87,7 +87,7 @@ ticketSchema.virtual('slaBreached').get(function () {
   return m !== null && m < 0;
 });
 
-// เสี่ยงเกิน SLA เมื่อเหลือน้อยกว่า 20% ของกรอบเวลา หรือเลยกำหนดแล้ว
+// ใกล้เกินกำหนด เมื่อเหลือน้อยกว่า 4 ชั่วโมง หรือเลยกำหนดแล้ว
 ticketSchema.virtual('slaRisk').get(function () {
   if (['resolved', 'cancelled'].includes(this.status)) return false;
   const m = this.slaRemainingMinutes;

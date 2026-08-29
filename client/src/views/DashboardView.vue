@@ -34,7 +34,7 @@ const kpis = computed(() => {
       pct: k.successRate, bar: '#6cb33f' },
     { label: 'เวลาตอบกลับเฉลี่ย', value: minutesText(k.avgResponseMinutes), sub: 'นับจากเวลาแจ้งถึงเริ่มดำเนินการ',
       pct: Math.min(100, Math.round((k.avgResponseMinutes / 240) * 100)), bar: '#7b5cd6' },
-    { label: 'เกิน SLA เดือนนี้', value: String(k.breachedThisMonth), sub: 'ตั๋วที่ปิดช้ากว่ากรอบเวลา',
+    { label: 'เกินกำหนดเดือนนี้', value: String(k.breachedThisMonth), sub: 'ตั๋วที่ปิดช้ากว่าเวลาที่กำหนด',
       pct: Math.min(100, Math.round((k.breachedThisMonth / Math.max(1, k.totalThisMonth)) * 100)), bar: '#c0392b' }
   ];
 });
@@ -104,16 +104,16 @@ function open(t) {
       </div>
     </div>
 
-    <!-- ตั๋วเสี่ยงเกิน SLA -->
+    <!-- ตั๋วที่ใกล้เกินกำหนด -->
     <div class="card-surface card-surface--flush">
       <div class="card-head">
-        <div class="card-title-sm">ตั๋วงานที่เสี่ยงเกิน SLA</div>
+        <div class="card-title-sm">ตั๋วงานที่ใกล้เกินกำหนด</div>
         <span class="pill pill--mono" style="background: #fdecec; color: #a12626">{{ slaRisk.length }} รายการ</span>
         <div class="flex-fill"></div>
         <RouterLink v-if="!auth.isEmployee" :to="{ name: 'queue' }" class="btn-ghost">ดูคิวทั้งหมด</RouterLink>
       </div>
 
-      <EmptyState v-if="!slaRisk.length" title="ไม่มีตั๋วงานที่เสี่ยงเกิน SLA" sub="ทุกงานยังอยู่ในกรอบเวลาที่กำหนด" />
+      <EmptyState v-if="!slaRisk.length" title="ไม่มีตั๋วงานที่ใกล้เกินกำหนด" sub="ทุกงานยังอยู่ในเวลาที่กำหนด" />
 
       <button v-for="t in slaRisk" :key="t._id" type="button" class="row-btn sla-row" @click="open(t)">
         <span class="tag-code">{{ t.code }}</span>

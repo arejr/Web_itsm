@@ -5,7 +5,7 @@ const PRIORITIES = ['low', 'medium', 'high', 'critical'];
 
 const PRIORITY_LABEL = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' };
 
-// เวลาตอบสนองตาม SLA (นาที) ต่อระดับความรุนแรง
+// กำหนดเสร็จ (นาที) ต่อระดับความรุนแรง — ใช้คำนวณวันเวลาที่ต้องแก้ไขให้เสร็จ
 const PRIORITY_SLA_MINUTES = {
   critical: 60,        // 1 ชม.
   high: 240,           // 4 ชม.

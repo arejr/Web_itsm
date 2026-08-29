@@ -160,7 +160,7 @@ async function closeMyself() {
 
       <div class="queue-head d-none d-lg-grid">
         <span>เลขตั๋ว</span><span>เรื่อง / ผู้แจ้ง</span><span>หมวดหมู่</span>
-        <span>ความสำคัญ</span><span>ผู้รับผิดชอบ</span><span class="text-end">SLA</span>
+        <span>ความสำคัญ</span><span>ผู้รับผิดชอบ</span><span class="text-end">กำหนดเสร็จ</span>
       </div>
 
       <LoadingRows v-if="store.loading" :rows="5" />
