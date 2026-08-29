@@ -8,6 +8,7 @@ import { useTicketStore } from '@/stores/tickets';
 import { useUiStore } from '@/stores/ui';
 import AppShell from '@/components/AppShell.vue';
 import ToastStack from '@/components/ToastStack.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -66,5 +67,6 @@ onBeforeUnmount(() => window.removeEventListener('itsm:unauthorized', onUnauthor
     </RouterView>
   </AppShell>
 
+  <ConfirmDialog />
   <ToastStack />
 </template>

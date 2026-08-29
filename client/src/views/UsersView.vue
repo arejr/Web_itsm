@@ -99,7 +99,14 @@ async function save() {
 // ระงับ / เปิดใช้งานบัญชีตามกฎระเบียบองค์กร
 async function toggleActive(u) {
   const verb = u.active ? 'ระงับ' : 'เปิดใช้งาน';
-  if (!window.confirm(`ต้องการ${verb}บัญชีของ ${u.name} ใช่หรือไม่?`)) return;
+  const yes = await ui.confirm({
+    title: `ต้องการ${verb}บัญชีนี้ใช่หรือไม่`,
+    text: `${u.name} · ${u.email}`,
+    okLabel: `${verb}บัญชี`,
+    cancelLabel: 'ไม่ทำ',
+    danger: u.active
+  });
+  if (!yes) return;
   try {
     const { data } = await api.patch(`/users/${u._id}/status`, { active: !u.active });
     const i = users.value.findIndex((x) => x._id === data._id);
@@ -111,7 +118,14 @@ async function toggleActive(u) {
 }
 
 async function remove(u) {
-  if (!window.confirm(`ต้องการลบบัญชีของ ${u.name} อย่างถาวรใช่หรือไม่?`)) return;
+  const yes = await ui.confirm({
+    title: 'ต้องการลบบัญชีนี้อย่างถาวรใช่หรือไม่',
+    text: `${u.name} · ${u.email} — ลบแล้วกู้คืนไม่ได้`,
+    okLabel: 'ลบถาวร',
+    cancelLabel: 'ไม่ลบ',
+    danger: true
+  });
+  if (!yes) return;
   try {
     await api.delete(`/users/${u._id}`);
     users.value = users.value.filter((x) => x._id !== u._id);

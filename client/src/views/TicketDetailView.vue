@@ -196,12 +196,26 @@ async function doTransfer() {
 
 // Helpdesk ยกเลิกตั๋วงาน (ใช้ปุ่มแยก เพราะไม่มีแถวปุ่มสถานะให้กด)
 async function cancelTicket() {
-  if (!window.confirm('ต้องการยกเลิกตั๋วงานนี้ใช่หรือไม่?')) return;
+  const yes = await ui.confirm({
+    title: 'ต้องการยกเลิกตั๋วงานนี้ใช่หรือไม่',
+    text: `${t.value.code} · ${t.value.title} — ตั๋วที่ยกเลิกแล้วจะปิดลงและแก้ไขต่อไม่ได้`,
+    okLabel: 'ยกเลิกตั๋วงาน',
+    cancelLabel: 'ไม่ยกเลิก',
+    danger: true
+  });
+  if (!yes) return;
   await setStatus('cancelled');
 }
 
 async function cancelOwn() {
-  if (!window.confirm('ต้องการยกเลิกตั๋วงานนี้ใช่หรือไม่?')) return;
+  const yes = await ui.confirm({
+    title: 'ต้องการยกเลิกตั๋วงานนี้ใช่หรือไม่',
+    text: `${t.value.code} · ${t.value.title} — ยกเลิกแล้วจะไม่มีเจ้าหน้าที่รับเรื่องต่อ`,
+    okLabel: 'ยกเลิกตั๋วงาน',
+    cancelLabel: 'ไม่ยกเลิก',
+    danger: true
+  });
+  if (!yes) return;
   busy.value = true;
   try {
     const { data } = await api.patch(`/tickets/${t.value._id}/status`, { status: 'cancelled', reason: 'ผู้แจ้งยกเลิกเอง' });

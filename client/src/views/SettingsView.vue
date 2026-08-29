@@ -56,7 +56,14 @@ async function saveCat() {
 }
 
 async function removeCat(c) {
-  if (!window.confirm(`ต้องการลบหมวดหมู่ "${c.label}" ใช่หรือไม่?`)) return;
+  const yes = await ui.confirm({
+    title: 'ต้องการลบหมวดหมู่นี้ใช่หรือไม่',
+    text: `หมวดหมู่ "${c.label}" จะถูกลบออกจากรายการที่ผู้แจ้งเลือกได้`,
+    okLabel: 'ลบหมวดหมู่',
+    cancelLabel: 'ไม่ลบ',
+    danger: true
+  });
+  if (!yes) return;
   try {
     await api.delete(`/categories/${c._id}`);
     await meta.load(true);
@@ -97,7 +104,14 @@ async function saveAnn() {
 }
 
 async function removeAnn(a) {
-  if (!window.confirm(`ต้องการลบประกาศ "${a.title}" ใช่หรือไม่?`)) return;
+  const yes = await ui.confirm({
+    title: 'ต้องการลบประกาศนี้ใช่หรือไม่',
+    text: `ประกาศ "${a.title}" จะหายไปจากแถบประกาศของทุกคน`,
+    okLabel: 'ลบประกาศ',
+    cancelLabel: 'ไม่ลบ',
+    danger: true
+  });
+  if (!yes) return;
   try {
     await api.delete(`/announcements/${a._id}`);
     announcements.value = announcements.value.filter((x) => x._id !== a._id);
