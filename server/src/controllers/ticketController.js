@@ -367,7 +367,7 @@ exports.resolve = async (req, res, next) => {
   }
 };
 
-// PATCH /api/tickets/:id/transfer — โอนย้ายตั๋วให้เจ้าหน้าที่/ทีมอื่น
+// PATCH /api/tickets/:id/transfer — มอบหมายงานให้เจ้าหน้าที่คนอื่น
 exports.transfer = async (req, res, next) => {
   try {
     const { assigneeId, group, reason } = req.body;
@@ -381,10 +381,10 @@ exports.transfer = async (req, res, next) => {
     ticket.assignee = target?._id || null;
     ticket.group = group || target?.group || '';
     ticket.status = target ? 'assigned' : 'new';
-    ticket.statusReason = reason || (target ? 'โอนย้ายงาน รอเจ้าหน้าที่รับงาน' : 'ส่งกลับคิวคัดกรอง');
+    ticket.statusReason = reason || (target ? 'มอบหมายงาน รอเจ้าหน้าที่รับงาน' : 'ส่งกลับคิวคัดกรอง');
     pushTimeline(
       ticket,
-      `โอนย้ายตั๋วงานจาก ${fromName} ไปยัง ${target?.name || ticket.group || 'คิวคัดกรอง'}`,
+      `มอบหมายงานจาก ${fromName} ไปยัง ${target?.name || ticket.group || 'คิวคัดกรอง'}`,
       req.user,
       'transfer'
     );
@@ -401,7 +401,7 @@ exports.transfer = async (req, res, next) => {
       await notify(io, {
         userIds: [target._id],
         tag: 'มอบหมาย',
-        title: 'มีตั๋วงานโอนย้ายมาถึงคุณ',
+        title: 'มีตั๋วงานมอบหมายมาถึงคุณ',
         body: `${ticket.code} · ${ticket.title}`,
         ticket: ticket._id,
         ticketCode: ticket.code

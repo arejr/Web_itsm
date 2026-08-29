@@ -125,13 +125,13 @@ const isOtherTech = computed(() => auth.isTech && !isMyTicket.value);
 // ตอบแชทได้เฉพาะผู้ที่เกี่ยวข้องกับตั๋วใบนั้น — ช่างที่ถูกโอนงานไปแล้วดูประวัติได้อย่างเดียว
 const canChat = computed(() => !isOtherTech.value);
 
-// ตั๋วที่ปิดหรือยกเลิกแล้วไม่ต้องมีปุ่มปิดงานและโอนย้ายอีก เหลือแค่แสดงวิธีแก้ที่บันทึกไว้
+// ตั๋วที่ปิดหรือยกเลิกแล้วไม่ต้องมีปุ่มปิดงานและมอบหมายงานอีก เหลือแค่แสดงวิธีแก้ที่บันทึกไว้
 const isClosed = computed(() => ['resolved', 'cancelled'].includes(t.value?.status));
 
 /**
  * สิ่งที่แต่ละบทบาททำได้ในแผงจัดการตั๋วงาน
  *   เจ้าหน้าที่ฝ่าย IT — รับงาน (กำลังดำเนินการ) แล้วบันทึกวิธีแก้เพื่อปิดงาน
- *   IT Helpdesk       — ปิดงานที่แก้เบื้องต้นได้ · โอนย้ายให้ทีมอื่น · ยกเลิก
+ *   IT Helpdesk       — ปิดงานที่แก้เบื้องต้นได้ · มอบหมายงานให้เจ้าหน้าที่ · ยกเลิก
  */
 const showStatusButtons = computed(() => auth.isTech);
 const showTransferButton = computed(() => auth.isHelpdesk);
@@ -186,7 +186,7 @@ async function doTransfer() {
     store.upsert(data);
     showTransfer.value = false;
     transferTo.value = '';
-    ui.success('โอนย้ายตั๋วงานเรียบร้อยแล้ว');
+    ui.success('มอบหมายงานเรียบร้อยแล้ว');
   } catch (err) {
     ui.error(errMsg(err));
   } finally {
@@ -418,17 +418,17 @@ function goBack() {
             </button>
 
             <button v-if="showTransferButton" class="btn-ghost w-100" type="button" @click="showTransfer = !showTransfer">
-              โอนย้ายตั๋วให้ทีมอื่น
+              มอบหมายงาน
             </button>
 
             <div v-if="showTransfer && showTransferButton" class="transfer-box">
               <select v-model="transferTo" class="input input--sm">
-                <option value="">— เลือกเจ้าหน้าที่ปลายทาง —</option>
+                <option value="">— เลือกเจ้าหน้าที่ที่จะมอบหมาย —</option>
                 <option v-for="tech in meta.technicians" :key="tech._id" :value="tech._id">
                   {{ tech.name }} · {{ tech.skill }} ({{ tech.load }} งาน)
                 </option>
               </select>
-              <button class="btn-brand w-100" type="button" :disabled="busy" @click="doTransfer">ยืนยันการโอนย้าย</button>
+              <button class="btn-brand w-100" type="button" :disabled="busy" @click="doTransfer">ยืนยันการมอบหมาย</button>
             </div>
 
             <button
@@ -446,7 +446,7 @@ function goBack() {
 
           <template v-else-if="isReadOnlyAdmin">
             <div class="employee-hint">
-              ผู้ดูแลระบบดูรายละเอียดและสถานะของตั๋วงานได้ แต่ไม่สามารถมอบหมาย โอนย้าย
+              ผู้ดูแลระบบดูรายละเอียดและสถานะของตั๋วงานได้ แต่ไม่สามารถมอบหมายงาน
               หรือปิดงานได้ — การจัดการงานเป็นหน้าที่ของ IT Helpdesk และเจ้าหน้าที่ฝ่าย IT
             </div>
             <div class="admin-state">

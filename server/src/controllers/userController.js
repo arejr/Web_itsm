@@ -119,7 +119,7 @@ exports.remove = async (req, res, next) => {
       status: { $in: ['assigned', 'inprogress'] }
     });
     if (open > 0) {
-      return res.status(400).json({ message: `ผู้ใช้นี้ยังถือตั๋วงานค้างอยู่ ${open} รายการ กรุณาโอนย้ายงานก่อน` });
+      return res.status(400).json({ message: `ผู้ใช้นี้ยังถือตั๋วงานค้างอยู่ ${open} รายการ กรุณามอบหมายงานให้ผู้อื่นก่อน` });
     }
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ message: 'ไม่พบผู้ใช้งาน' });
