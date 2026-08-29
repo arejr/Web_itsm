@@ -105,21 +105,33 @@ async function req(m, path, t, body) {
   check('Admin แก้ไขรายละเอียดตั๋วไม่ได้',
     (await req('PATCH', `/tickets/${tid}`, admin, { title: 'x' })).status === 403);
 
-  // 5. โอนย้ายตั๋วให้ทีมอื่น
-  const siriporn = techs.find(x => x.name.startsWith('ศิริพร'));
-  const tr = await req('PATCH', `/tickets/${tid}/transfer`, tech, { assigneeId: siriporn._id });
-  check('โอนย้ายตั๋วให้ทีมอื่นได้', tr.status === 200 && tr.j.assignee?._id === siriporn._id, tr.j.message||'');
+  // เจ้าหน้าที่ IT ทำงานได้เฉพาะตั๋วที่ตนได้รับมอบหมาย
+  const piyapong = await login('piyapong.w@company.co.th');
+  check('ช่างคนอื่นเปลี่ยนสถานะตั๋วที่ไม่ใช่ของตนไม่ได้',
+    (await req('PATCH', `/tickets/${tid}/status`, piyapong, { status: 'pending' })).status === 403);
+  check('ช่างคนอื่นปิดงานที่ไม่ใช่ของตนไม่ได้',
+    (await req('PATCH', `/tickets/${tid}/resolve`, piyapong, { note: 'x' })).status === 403);
+  check('ช่างคนอื่นยังดูรายละเอียดตั๋วได้',
+    (await req('GET', `/tickets/${tid}`, piyapong)).status === 200);
 
-  // 6. ปิดตั๋วพร้อมบันทึก Resolution Note + เผยแพร่เข้า KB
-  const noNote = await req('PATCH', `/tickets/${tid}/resolve`, tech, { note: '' });
+  // 5. โอนย้ายตั๋วให้ทีมอื่น (เป็นหน้าที่ของ Helpdesk)
+  const siriporn = techs.find(x => x.name.startsWith('ศิริพร'));
+  const tr = await req('PATCH', `/tickets/${tid}/transfer`, helpdesk, { assigneeId: siriporn._id });
+  check('Helpdesk โอนย้ายตั๋วให้ทีมอื่นได้', tr.status === 200 && tr.j.assignee?._id === siriporn._id, tr.j.message||'');
+  check('ช่างเดิมหมดสิทธิ์หลังตั๋วถูกโอนไปให้คนอื่น',
+    (await req('PATCH', `/tickets/${tid}/status`, tech, { status: 'pending' })).status === 403);
+
+  // 6. ปิดตั๋วพร้อมบันทึก Resolution Note + เผยแพร่เข้า KB (โดยผู้รับผิดชอบคนใหม่)
+  const newOwner = await login('siriporn.m@company.co.th');
+  const noNote = await req('PATCH', `/tickets/${tid}/resolve`, newOwner, { note: '' });
   check('ปิดตั๋วโดยไม่มี Resolution Note ไม่ได้', noNote.status === 400);
-  const kbBefore = (await req('GET','/articles', tech)).j.length;
-  const res = await req('PATCH', `/tickets/${tid}/resolve`, tech, {
+  const kbBefore = (await req('GET','/articles', newOwner)).j.length;
+  const res = await req('PATCH', `/tickets/${tid}/resolve`, newOwner, {
     note: 'เปลี่ยน USB receiver ตัวใหม่และติดตั้งไดรเวอร์ Logitech Options ใหม่', publishToKb: true
   });
-  check('ปิดตั๋วพร้อม Resolution Note ได้', res.status === 200 && res.j.ticket.status === 'resolved', res.j.message||'');
+  check('ผู้รับผิดชอบคนใหม่ปิดตั๋วพร้อม Resolution Note ได้', res.status === 200 && res.j.ticket.status === 'resolved', res.j.message||'');
   check('เผยแพร่เข้าฐานความรู้ได้', !!res.j.article?.ref, res.j.article?.ref);
-  const kbAfter = (await req('GET','/articles', tech)).j.length;
+  const kbAfter = (await req('GET','/articles', newOwner)).j.length;
   check('จำนวนบทความ KB เพิ่มขึ้น', kbAfter === kbBefore + 1, `${kbBefore} → ${kbAfter}`);
 
   // 7. Helpdesk ออกตั๋วแทนผู้แจ้ง (walk-in / โทรศัพท์)

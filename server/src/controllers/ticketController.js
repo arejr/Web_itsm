@@ -25,6 +25,18 @@ function pushTimeline(ticket, title, user, kind = 'info') {
   ticket.timeline.push({ title, by: user?.name || 'ระบบ', byUser: user?._id, kind });
 }
 
+/**
+ * เจ้าหน้าที่ฝ่าย IT ทำงานกับตั๋วได้เฉพาะใบที่ตนได้รับมอบหมายเท่านั้น
+ * เพื่อไม่ให้ช่างคนอื่นเข้ามาแก้สถานะหรือปิดงานที่ไม่ใช่ของตน
+ * คืนข้อความผิดพลาดเมื่อไม่มีสิทธิ์ และคืน null เมื่อผ่าน
+ */
+function assigneeGuard(user, ticket) {
+  if (user.role !== 'tech') return null;
+  const assignee = ticket.assignee?._id || ticket.assignee;
+  if (assignee && String(assignee) === String(user._id)) return null;
+  return 'ตั๋วงานนี้ไม่ได้มอบหมายให้คุณ จึงไม่สามารถดำเนินการได้';
+}
+
 // รายชื่อผู้ที่ควรได้รับแจ้งเตือนของตั๋วนี้ (ผู้แจ้ง + ผู้รับผิดชอบ) ยกเว้นคนที่ทำ action เอง
 function watchers(ticket, exceptUserId) {
   return [ticket.requester, ticket.assignee]
@@ -273,6 +285,9 @@ exports.updateStatus = async (req, res, next) => {
       return res.status(403).json({ message: 'ผู้ดูแลระบบไม่มีสิทธิ์เปลี่ยนสถานะตั๋วงาน' });
     }
 
+    const denied = assigneeGuard(req.user, ticket);
+    if (denied) return res.status(403).json({ message: denied });
+
     // พนักงานทั่วไปทำได้เฉพาะยกเลิกตั๋วของตัวเอง
     if (req.user.role === 'employee') {
       const own = String(ticket.requester?._id) === String(req.user._id);
@@ -323,6 +338,10 @@ exports.resolve = async (req, res, next) => {
     const { note, publishToKb } = req.body;
     const ticket = await Ticket.findById(req.params.id).populate(POPULATE);
     if (!ticket) return res.status(404).json({ message: 'ไม่พบตั๋วงานนี้' });
+
+    const denied = assigneeGuard(req.user, ticket);
+    if (denied) return res.status(403).json({ message: denied });
+
     if (!note || !String(note).trim()) {
       return res.status(400).json({ message: 'กรุณาบันทึกวิธีแก้ปัญหา (Resolution Note) ก่อนปิดตั๋วงาน' });
     }
@@ -430,6 +449,9 @@ exports.update = async (req, res, next) => {
     ];
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ message: 'ไม่พบตั๋วงานนี้' });
+
+    const denied = assigneeGuard(req.user, ticket);
+    if (denied) return res.status(403).json({ message: denied });
 
     allowed.forEach((k) => {
       if (req.body[k] !== undefined) ticket[k] = req.body[k];
