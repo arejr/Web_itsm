@@ -31,12 +31,13 @@ router.delete('/users/:id', requireAuth, requireRole('admin'), users.remove);
 router.get('/tickets', requireAuth, tickets.list);
 router.post('/tickets', requireAuth, upload.array('attachments', 5), tickets.create);
 router.get('/tickets/:id', requireAuth, tickets.get);
-router.patch('/tickets/:id/triage', requireAuth, requireRole('admin', 'helpdesk'), tickets.triage);
+// ผู้ดูแลระบบดูตั๋วงานได้อย่างเดียว การจัดการงานเป็นหน้าที่ของ Helpdesk และเจ้าหน้าที่ IT
+router.patch('/tickets/:id/triage', requireAuth, requireRole('helpdesk'), tickets.triage);
 router.patch('/tickets/:id/status', requireAuth, tickets.updateStatus);
-router.patch('/tickets/:id/resolve', requireAuth, requireRole('admin', 'helpdesk', 'tech'), tickets.resolve);
-router.patch('/tickets/:id/transfer', requireAuth, requireRole('admin', 'helpdesk', 'tech'), tickets.transfer);
-router.patch('/tickets/:id', requireAuth, requireRole('admin', 'helpdesk', 'tech'), tickets.update);
-router.post('/tickets/:id/attachments', requireAuth, upload.array('attachments', 5), tickets.addAttachments);
+router.patch('/tickets/:id/resolve', requireAuth, requireRole('helpdesk', 'tech'), tickets.resolve);
+router.patch('/tickets/:id/transfer', requireAuth, requireRole('helpdesk', 'tech'), tickets.transfer);
+router.patch('/tickets/:id', requireAuth, requireRole('helpdesk', 'tech'), tickets.update);
+router.post('/tickets/:id/attachments', requireAuth, requireRole('helpdesk', 'tech', 'employee'), upload.array('attachments', 5), tickets.addAttachments);
 router.delete('/tickets/:id', requireAuth, requireRole('admin'), tickets.remove);
 
 /* ---------- แชทในตั๋วงาน ---------- */

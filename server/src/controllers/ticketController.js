@@ -268,6 +268,11 @@ exports.updateStatus = async (req, res, next) => {
     const ticket = await Ticket.findById(req.params.id).populate(POPULATE);
     if (!ticket) return res.status(404).json({ message: 'ไม่พบตั๋วงานนี้' });
 
+    // ผู้ดูแลระบบดูได้อย่างเดียว เปลี่ยนสถานะงานไม่ได้
+    if (req.user.role === 'admin') {
+      return res.status(403).json({ message: 'ผู้ดูแลระบบไม่มีสิทธิ์เปลี่ยนสถานะตั๋วงาน' });
+    }
+
     // พนักงานทั่วไปทำได้เฉพาะยกเลิกตั๋วของตัวเอง
     if (req.user.role === 'employee') {
       const own = String(ticket.requester?._id) === String(req.user._id);

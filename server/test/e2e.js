@@ -92,6 +92,19 @@ async function req(m, path, t, body) {
   const empNotifs = (await req('GET','/notifications', emp)).j;
   check('ผู้แจ้งได้รับแจ้งเตือนข้อความใหม่', empNotifs.items.some(n => n.tag === 'ข้อความ'));
 
+  // ผู้ดูแลระบบดูตั๋วงานได้อย่างเดียว
+  check('Admin ดูรายละเอียดตั๋วได้', (await req('GET', `/tickets/${tid}`, admin)).status === 200);
+  check('Admin คัดกรอง/มอบหมายไม่ได้',
+    (await req('PATCH', `/tickets/${tid}/triage`, admin, { priority: 'low' })).status === 403);
+  check('Admin เปลี่ยนสถานะไม่ได้',
+    (await req('PATCH', `/tickets/${tid}/status`, admin, { status: 'pending' })).status === 403);
+  check('Admin โอนย้ายงานไม่ได้',
+    (await req('PATCH', `/tickets/${tid}/transfer`, admin, { assigneeId: thanawat._id })).status === 403);
+  check('Admin ปิดงานไม่ได้',
+    (await req('PATCH', `/tickets/${tid}/resolve`, admin, { note: 'x' })).status === 403);
+  check('Admin แก้ไขรายละเอียดตั๋วไม่ได้',
+    (await req('PATCH', `/tickets/${tid}`, admin, { title: 'x' })).status === 403);
+
   // 5. โอนย้ายตั๋วให้ทีมอื่น
   const siriporn = techs.find(x => x.name.startsWith('ศิริพร'));
   const tr = await req('PATCH', `/tickets/${tid}/transfer`, tech, { assigneeId: siriporn._id });

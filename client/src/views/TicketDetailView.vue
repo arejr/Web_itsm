@@ -113,7 +113,9 @@ async function sendChat() {
 }
 
 /* ---------- การจัดการตั๋ว ---------- */
-const canAct = computed(() => auth.isStaff);
+// ผู้ดูแลระบบดูตั๋วงานได้อย่างเดียว การจัดการงานเป็นหน้าที่ของ Helpdesk และเจ้าหน้าที่ IT
+const canAct = computed(() => auth.isHelpdesk || auth.isTech);
+const isReadOnlyAdmin = computed(() => auth.isAdmin);
 const statusButtons = ['inprogress', 'pending', 'resolved', 'cancelled'];
 
 const trackIndex = computed(() => STATUS_TRACK.findIndex((s) => s.key === t.value?.status));
@@ -375,7 +377,9 @@ function goBack() {
       <!-- แถบด้านข้าง -->
       <div class="detail-rail">
         <div class="card-surface p-3 d-flex flex-column gap-3">
-          <div class="card-title-xs">{{ canAct ? 'จัดการตั๋วงาน' : 'สิ่งที่คุณทำได้' }}</div>
+          <div class="card-title-xs">
+            {{ canAct ? 'จัดการตั๋วงาน' : isReadOnlyAdmin ? 'มุมมองผู้ดูแลระบบ' : 'สิ่งที่คุณทำได้' }}
+          </div>
 
           <template v-if="canAct">
             <div class="status-grid">
@@ -420,6 +424,22 @@ function goBack() {
                 </option>
               </select>
               <button class="btn-brand w-100" type="button" :disabled="busy" @click="doTransfer">ยืนยันการโอนย้าย</button>
+            </div>
+          </template>
+
+          <template v-else-if="isReadOnlyAdmin">
+            <div class="employee-hint">
+              ผู้ดูแลระบบดูรายละเอียดและสถานะของตั๋วงานได้ แต่ไม่สามารถมอบหมาย โอนย้าย
+              หรือปิดงานได้ — การจัดการงานเป็นหน้าที่ของ IT Helpdesk และเจ้าหน้าที่ฝ่าย IT
+            </div>
+            <div class="admin-state">
+              <div><span class="meta-label">สถานะปัจจุบัน</span><span class="meta-value" :style="{ color: stat(t.status).fg }">{{ stat(t.status).label }}</span></div>
+              <div><span class="meta-label">ผู้รับผิดชอบ</span><span class="meta-value">{{ t.assigneeName }}</span></div>
+              <div><span class="meta-label">กำหนดเสร็จตาม SLA</span><span class="meta-value mono" :style="{ color: t.slaRisk ? '#a12626' : '#22292f' }">{{ t.slaText }}</span></div>
+            </div>
+            <div v-if="t.resolutionNote" class="resolution-box">
+              <span class="meta-label">วิธีแก้ปัญหาที่บันทึกไว้</span>
+              <span style="font: 400 12px/1.8 var(--font-th); color: var(--ink-2)">{{ t.resolutionNote }}</span>
             </div>
           </template>
 
@@ -542,6 +562,7 @@ function goBack() {
   font: 400 12px/1.7 var(--font-th); color: var(--ink-3);
 }
 .resolution-box { padding: 12px; border-radius: 9px; background: var(--ok-soft); border: 1px solid #d6e6bd; display: flex; flex-direction: column; gap: 4px; }
+.admin-state { display: flex; flex-direction: column; gap: 11px; padding: 12px; border-radius: 9px; background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07); }
 
 .timeline { display: grid; grid-template-columns: 14px 1fr; gap: 11px; }
 .timeline__marker { display: flex; flex-direction: column; align-items: center; }

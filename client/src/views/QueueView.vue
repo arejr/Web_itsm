@@ -190,7 +190,7 @@ async function closeMyself() {
         <span class="queue-row__assignee text-truncate" :class="{ 'is-none': !t.assignee }">{{ t.assigneeName }}</span>
         <span class="queue-row__sla mono" :class="{ 'is-risk': t.slaRisk }">{{ t.slaText }}</span>
         <button
-          v-if="t.status === 'new' && (auth.isAdmin || auth.isHelpdesk)"
+          v-if="t.status === 'new' && auth.isHelpdesk"
           type="button"
           class="queue-row__triage"
           @click.stop="selectForTriage(t)"
@@ -201,7 +201,7 @@ async function closeMyself() {
     </div>
 
     <!-- แผงด้านข้าง: คัดกรองตั๋วเข้าใหม่ -->
-    <div v-if="auth.isAdmin || auth.isHelpdesk" class="card-surface queue-panel">
+    <div v-if="auth.isHelpdesk" class="card-surface queue-panel">
         <div class="card-title-xs">ตั๋วเข้าใหม่ที่รอคัดกรอง ({{ newTickets.length }})</div>
 
         <EmptyState v-if="!selected" title="ไม่มีตั๋วรอคัดกรอง" sub="ตั๋วใหม่จะปรากฏที่นี่ทันทีที่มีผู้แจ้งเข้ามา" />
@@ -296,6 +296,8 @@ async function closeMyself() {
 
 <style scoped>
 .queue-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
+/* ไม่มีแผงคัดกรอง (เช่น ผู้ดูแลระบบ) ให้ตารางกินเต็มความกว้าง */
+.queue-layout:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
 
 .queue-tabs {
   display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
