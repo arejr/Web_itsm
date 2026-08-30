@@ -1,41 +1,27 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import api, { errMsg } from '@/services/api';
-import { useAuthStore } from '@/stores/auth';
 import { useMetaStore } from '@/stores/meta';
+import { PRIORITY } from '@/services/lookups';
 import { useTicketStore } from '@/stores/tickets';
-import { useUiStore } from '@/stores/ui';
-import { PRIORITY, PRIORITY_ORDER, prio } from '@/services/lookups';
+
 import EmptyState from '@/components/EmptyState.vue';
 import LoadingRows from '@/components/LoadingRows.vue';
 
 const route = useRoute();
 const router = useRouter();
-const auth = useAuthStore();
 const meta = useMetaStore();
 const store = useTicketStore();
-const ui = useUiStore();
 
 const tab = ref('all');
 const search = ref(route.query.q || '');
-const busy = ref(false);
-
-/* ---------- แผงคัดกรอง ---------- */
-const selectedId = ref(null);
-const triage = ref({ categoryId: '', priority: 'medium', assigneeId: '' });
 
 onMounted(async () => {
   await meta.load();
-  await meta.loadTechnicians();
   await store.load();
-  if (meta.categories.length) triage.value.categoryId = meta.categories[0]._id;
-  pickFirstNew();
 });
 
 watch(() => route.query.q, (q) => { search.value = q || ''; });
-
-const OPEN = ['new', 'assigned', 'inprogress'];
 
 const tabs = computed(() => {
   const list = store.items;
@@ -62,80 +48,10 @@ const rows = computed(() => {
   });
 });
 
-const newTickets = computed(() => store.items.filter((t) => t.status === 'new'));
-const selected = computed(() => store.items.find((t) => t._id === selectedId.value) || null);
-
-function pickFirstNew() {
-  if (!selectedId.value || !newTickets.value.some((t) => t._id === selectedId.value)) {
-    const first = newTickets.value[0];
-    selectedId.value = first?._id || null;
-    if (first) {
-      triage.value.categoryId = first.category?._id || meta.categories[0]?._id || '';
-      triage.value.priority = first.priority || 'medium';
-      triage.value.assigneeId = '';
-    }
-  }
-}
-watch(newTickets, pickFirstNew);
-
-function selectForTriage(t) {
-  selectedId.value = t._id;
-  triage.value.categoryId = t.category?._id || meta.categories[0]?._id || '';
-  triage.value.priority = t.priority || 'medium';
-  triage.value.assigneeId = t.assignee?._id || '';
-}
 
 function open(t) {
   router.push({ name: 'ticket-detail', params: { id: t._id } });
 }
-
-const triageHint = computed(() => {
-  const tech = meta.technicians.find((x) => x._id === triage.value.assigneeId);
-  const p = prio(triage.value.priority);
-  return tech
-    ? `จะมอบหมายให้ ${tech.name} · ระดับ ${p.label}`
-    : `เลือกเจ้าหน้าที่ผู้รับผิดชอบ · ระดับ ${p.label}`;
-});
-
-async function submitTriage() {
-  if (!selected.value) return;
-  if (!triage.value.assigneeId) {
-    ui.error('กรุณาเลือกเจ้าหน้าที่ผู้รับผิดชอบ');
-    return;
-  }
-  busy.value = true;
-  try {
-    const { data } = await api.patch(`/tickets/${selected.value._id}/triage`, triage.value);
-    store.upsert(data);
-    ui.success(`มอบหมาย ${data.code} เรียบร้อยแล้ว`);
-    selectedId.value = null;
-    pickFirstNew();
-  } catch (err) {
-    ui.error(errMsg(err));
-  } finally {
-    busy.value = false;
-  }
-}
-
-// Helpdesk แก้ปัญหาเบื้องต้นและปิดตั๋วได้ทันที
-async function closeMyself() {
-  if (!selected.value) return;
-  const note = window.prompt('บันทึกวิธีแก้ปัญหา (Resolution Note) ก่อนปิดตั๋วงาน');
-  if (!note) return;
-  busy.value = true;
-  try {
-    const { data } = await api.patch(`/tickets/${selected.value._id}/resolve`, { note, publishToKb: false });
-    store.upsert(data.ticket);
-    ui.success(`ปิดตั๋ว ${data.ticket.code} เรียบร้อยแล้ว`);
-    selectedId.value = null;
-    pickFirstNew();
-  } catch (err) {
-    ui.error(errMsg(err));
-  } finally {
-    busy.value = false;
-  }
-}
-
 </script>
 
 <template>
@@ -169,9 +85,9 @@ async function closeMyself() {
         v-for="t in rows"
         :key="t._id"
         class="queue-row"
+        :class="{ 'is-new': t.status === 'new' }"
         role="button"
         tabindex="0"
-        :class="{ 'is-new': t.status === 'new', 'is-selected': t._id === selectedId }"
         @click="open(t)"
         @keydown.enter="open(t)"
       >
@@ -188,114 +104,13 @@ async function closeMyself() {
         </span>
         <span class="queue-row__assignee text-truncate" :class="{ 'is-none': !t.assignee }">{{ t.assigneeName }}</span>
         <span class="queue-row__sla mono" :class="{ 'is-risk': t.slaRisk }">{{ t.slaText }}</span>
-        <button
-          v-if="t.status === 'new' && auth.isHelpdesk"
-          type="button"
-          class="queue-row__triage"
-          @click.stop="selectForTriage(t)"
-        >
-          คัดกรอง
-        </button>
       </div>
-    </div>
-
-    <!-- แผงด้านข้าง: คัดกรองตั๋วเข้าใหม่ -->
-    <div v-if="auth.isHelpdesk" class="card-surface queue-panel">
-        <div class="card-title-xs">ตั๋วเข้าใหม่ที่รอคัดกรอง ({{ newTickets.length }})</div>
-
-        <EmptyState v-if="!selected" title="ไม่มีตั๋วรอคัดกรอง" sub="ตั๋วใหม่จะปรากฏที่นี่ทันทีที่มีผู้แจ้งเข้ามา" />
-
-        <template v-else>
-          <div class="panel-ticket">
-            <span class="tag-code">{{ selected.code }}</span>
-            <span class="panel-ticket__title">{{ selected.title }}</span>
-            <span class="panel-ticket__meta">{{ selected.requesterDisplay }} · {{ selected.requesterDept }}</span>
-            <span v-if="selected.location" class="panel-ticket__meta">📍 {{ selected.location }}</span>
-          </div>
-
-          <div v-if="newTickets.length > 1" class="d-flex flex-wrap gap-1">
-            <button
-              v-for="t in newTickets"
-              :key="t._id"
-              type="button"
-              class="chip chip--tiny"
-              :class="{ 'is-active': t._id === selectedId }"
-              @click="selectForTriage(t)"
-            >
-              {{ t.code.slice(-4) }}
-            </button>
-          </div>
-
-          <div class="d-flex flex-column gap-2">
-            <span class="section-label">จัดหมวดหมู่ปัญหา</span>
-            <div class="d-flex flex-wrap gap-1">
-              <button
-                v-for="c in meta.categories"
-                :key="c._id"
-                type="button"
-                class="chip"
-                :class="{ 'is-active': triage.categoryId === c._id }"
-                @click="triage.categoryId = c._id"
-              >
-                {{ c.label }}
-              </button>
-            </div>
-          </div>
-
-          <div class="d-flex flex-column gap-2">
-            <span class="section-label">ระดับความสำคัญ</span>
-            <div class="prio-grid">
-              <button
-                v-for="p in PRIORITY_ORDER"
-                :key="p"
-                type="button"
-                class="prio-btn"
-                :class="{ 'is-active': triage.priority === p }"
-                :style="triage.priority === p ? { background: PRIORITY[p].bg, color: PRIORITY[p].fg, borderColor: PRIORITY[p].dot } : {}"
-                @click="triage.priority = p"
-              >
-                {{ PRIORITY[p].label }}
-              </button>
-            </div>
-          </div>
-
-          <div class="d-flex flex-column gap-2">
-            <span class="section-label">มอบหมายเจ้าหน้าที่</span>
-            <button
-              v-for="tech in meta.technicians"
-              :key="tech._id"
-              type="button"
-              class="tech-btn"
-              :class="{ 'is-active': triage.assigneeId === tech._id }"
-              @click="triage.assigneeId = tech._id"
-            >
-              <span class="avatar avatar--sm">{{ tech.initial }}</span>
-              <span class="d-flex flex-column flex-fill min-w-0 text-start">
-                <span class="tech-btn__name text-truncate">{{ tech.name }}</span>
-                <span class="tech-btn__skill text-truncate">{{ tech.skill }}</span>
-              </span>
-              <span class="pill pill--mono" :style="tech.load > 5 ? { background: '#fdf3e3', color: '#9a5b06' } : { background: '#eef6e4', color: '#4a7f22' }">
-                {{ tech.load }} งาน
-              </span>
-            </button>
-          </div>
-
-          <div class="d-flex gap-2">
-            <button class="btn-brand flex-fill py-3" type="button" :disabled="busy" @click="submitTriage">
-              มอบหมายตั๋วงาน
-            </button>
-            <button class="btn-ghost" type="button" :disabled="busy" @click="closeMyself">ปิดเอง</button>
-          </div>
-          <p class="panel-hint">{{ triageHint }}</p>
-        </template>
     </div>
   </div>
 </template>
 
 <style scoped>
-.queue-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
-/* ไม่มีแผงคัดกรอง (เช่น ผู้ดูแลระบบ) ให้ตารางกินเต็มความกว้าง */
-.queue-layout:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
+.queue-layout { display: flex; flex-direction: column; }
 
 .queue-tabs {
   display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
@@ -324,64 +139,19 @@ async function closeMyself() {
 }
 .queue-row.is-new { background: #fffdf7; }
 .queue-row:hover { background: var(--surface-2); }
-.queue-row.is-selected { box-shadow: inset 3px 0 0 var(--brand); }
 .queue-row__title { font: 500 13px var(--font-th); }
 .queue-row__meta { font: 400 11.5px var(--font-th); color: var(--muted-2); }
 .queue-row__assignee { font: 400 12px var(--font-th); color: var(--muted); }
 .queue-row__assignee.is-none { color: var(--danger); }
 .queue-row__sla { justify-self: end; font: 500 11.5px var(--font-mono); color: var(--muted); }
 .queue-row__sla.is-risk { color: var(--danger-ink); }
-.queue-row__triage {
-  position: absolute; right: 16px; bottom: 8px;
-  padding: 3px 9px; border-radius: 20px;
-  border: 1px solid var(--brand); background: var(--brand-tint); color: var(--brand-ink);
-  font: 500 10.5px var(--font-th); cursor: pointer;
-}
-
-.queue-panel {
-  padding: 18px; display: flex; flex-direction: column; gap: 15px;
-  position: sticky; top: 88px;
-  max-height: calc(100vh - 110px); overflow-y: auto;
-}
-.panel-ticket {
-  padding: 12px 13px; border-radius: 9px;
-  background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07);
-  display: flex; flex-direction: column; gap: 4px;
-}
-.panel-ticket__title { font: 500 13px var(--font-th); }
-.panel-ticket__meta { font: 400 11.5px var(--font-th); color: var(--muted-2); }
-
-.chip--tiny { padding: 3px 8px; font-size: 10.5px; font-family: var(--font-mono); }
-
-.prio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.prio-btn {
-  padding: 7px; border-radius: 7px;
-  border: 1px solid var(--line-strong); background: #fff; color: var(--muted);
-  cursor: pointer; font: 500 11.5px var(--font-mono);
-}
-
-.tech-btn {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 11px; border-radius: var(--radius);
-  border: 1px solid rgba(16, 24, 32, 0.1); background: #fff;
-  cursor: pointer; width: 100%;
-}
-.tech-btn.is-active { background: var(--brand-tint); border-color: var(--brand); }
-.tech-btn__name { font: 500 12.5px var(--font-th); }
-.tech-btn__skill { font: 400 11px var(--font-th); color: var(--muted-2); }
-
-.panel-hint { font: 400 11.5px var(--font-th); color: var(--muted-2); text-align: center; margin: 0; }
 .min-w-0 { min-width: 0; }
 
-@media (max-width: 1199.98px) {
-  .queue-layout { grid-template-columns: 1fr; }
-  .queue-panel { position: static; max-height: none; }
-}
 @media (max-width: 991.98px) {
   .queue-row {
     grid-template-columns: 1fr auto;
     grid-template-areas: 'code sla' 'title title' 'cat prio' 'assignee assignee';
-    gap: 5px 10px; padding: 14px 16px 30px;
+    gap: 5px 10px; padding: 14px 16px;
   }
   .queue-row > :nth-child(1) { grid-area: code; }
   .queue-row > :nth-child(2) { grid-area: title; }
