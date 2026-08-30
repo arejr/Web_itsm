@@ -62,6 +62,17 @@ async function req(m, path, t, body) {
   check('ปรับ SLA ตามความสำคัญใหม่', triaged.j.priority === 'high');
   check('ไทม์ไลน์บันทึกการมอบหมาย', (triaged.j.timeline||[]).some(e => e.kind === 'assign'));
 
+  // Helpdesk เปลี่ยนหมวดหมู่ปัญหาจากหน้ารายละเอียดตั๋วได้ (ส่งมาแค่ categoryId อย่างเดียว)
+  const catList = (await req('GET', '/categories', helpdesk)).j;
+  const network = catList.find(c => c.key === 'network') || catList[1];
+  const recat = await req('PATCH', `/tickets/${tid}/triage`, helpdesk, { categoryId: network._id });
+  check('Helpdesk จัดหมวดหมู่ปัญหาได้โดยไม่ต้องส่งค่าอื่น',
+    recat.status === 200 && recat.j.category?._id === network._id, recat.j.message||'');
+  check('ไทม์ไลน์บันทึกการจัดหมวดหมู่',
+    (recat.j.timeline||[]).some(e => (e.title||'').includes('จัดหมวดหมู่ปัญหาเป็น')));
+  check('เจ้าหน้าที่ IT จัดหมวดหมู่เองไม่ได้',
+    (await req('PATCH', `/tickets/${tid}/triage`, tech, { categoryId: network._id })).status === 403);
+
   // เจ้าหน้าที่ได้รับการแจ้งเตือน
   const techNotifs = (await req('GET','/notifications', tech)).j;
   check('เจ้าหน้าที่ได้รับแจ้งเตือนการมอบหมาย',

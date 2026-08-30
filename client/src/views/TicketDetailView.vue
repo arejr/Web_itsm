@@ -135,6 +135,8 @@ const isClosed = computed(() => ['resolved', 'cancelled'].includes(t.value?.stat
  */
 const showStatusButtons = computed(() => auth.isTech);
 const showTransferButton = computed(() => auth.isHelpdesk);
+// จัดหมวดหมู่ปัญหาเป็นหน้าที่ของ Helpdesk และทำได้เฉพาะตั๋วที่ยังไม่ปิด
+const canTriage = computed(() => auth.isHelpdesk && !isClosed.value);
 const showCancelButton = computed(() => auth.isHelpdesk);
 const isReadOnlyAdmin = computed(() => auth.isAdmin);
 // เจ้าหน้าที่ IT กดรับงานอย่างเดียว ส่วนการปิดงานใช้ปุ่มบันทึกและปิดตั๋วงานที่บังคับให้กรอกวิธีแก้
@@ -187,6 +189,21 @@ async function doTransfer() {
     showTransfer.value = false;
     transferTo.value = '';
     ui.success('มอบหมายงานเรียบร้อยแล้ว');
+  } catch (err) {
+    ui.error(errMsg(err));
+  } finally {
+    busy.value = false;
+  }
+}
+
+// Helpdesk จัดหมวดหมู่ปัญหาได้จากหน้ารายละเอียด ไม่ต้องย้อนกลับไปหน้าคิวคัดกรอง
+async function setCategory(cat) {
+  if (busy.value || String(t.value.category?._id || '') === String(cat._id)) return;
+  busy.value = true;
+  try {
+    const { data } = await api.patch(`/tickets/${t.value._id}/triage`, { categoryId: cat._id });
+    store.upsert(data);
+    ui.success(`จัดหมวดหมู่เป็น ${cat.label} แล้ว`);
   } catch (err) {
     ui.error(errMsg(err));
   } finally {
@@ -396,6 +413,23 @@ function goBack() {
           </div>
 
           <template v-if="canAct">
+            <div v-if="canTriage" class="triage-block">
+              <span class="meta-label">หมวดหมู่ปัญหา</span>
+              <div class="triage-chips">
+                <button
+                  v-for="c in meta.categories"
+                  :key="c._id"
+                  type="button"
+                  class="chip"
+                  :class="{ 'is-active': String(t.category?._id || '') === String(c._id) }"
+                  :disabled="busy"
+                  @click="setCategory(c)"
+                >
+                  {{ c.label }}
+                </button>
+              </div>
+            </div>
+
             <div v-if="showStatusButtons" class="status-grid">
               <button
                 v-for="s in statusButtons"
@@ -665,6 +699,8 @@ function goBack() {
   font: 400 12px/1.7 var(--font-th); color: var(--ink-3);
 }
 .resolution-box { padding: 12px; border-radius: 9px; background: var(--ok-soft); border: 1px solid #d6e6bd; display: flex; flex-direction: column; gap: 4px; }
+.triage-block { display: flex; flex-direction: column; gap: 8px; }
+.triage-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .resolution-box__text { font: 400 12.5px/1.8 var(--font-th); color: var(--ink-2); white-space: pre-line; }
 .closed-hint { font: 400 11.5px var(--font-th); color: var(--muted-2); text-align: center; }
 .admin-state { display: flex; flex-direction: column; gap: 11px; padding: 12px; border-radius: 9px; background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07); }
