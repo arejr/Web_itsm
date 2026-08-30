@@ -73,6 +73,16 @@ async function req(m, path, t, body) {
   check('เจ้าหน้าที่ IT จัดหมวดหมู่เองไม่ได้',
     (await req('PATCH', `/tickets/${tid}/triage`, tech, { categoryId: network._id })).status === 403);
 
+  // เปลี่ยนระดับความสำคัญอย่างเดียวได้ และกำหนดเสร็จต้องคำนวณใหม่ตามระดับที่เลือก
+  const dueBefore = recat.j.slaDueAt;
+  const repri = await req('PATCH', `/tickets/${tid}/triage`, helpdesk, { priority: 'critical' });
+  check('Helpdesk กำหนดระดับความสำคัญได้โดยไม่ต้องส่งค่าอื่น',
+    repri.status === 200 && repri.j.priority === 'critical', repri.j.message||'');
+  check('กำหนดเสร็จถูกคำนวณใหม่ให้สั้นลงตามระดับที่เร่งขึ้น',
+    new Date(repri.j.slaDueAt) < new Date(dueBefore), `${dueBefore} → ${repri.j.slaDueAt}`);
+  check('ไทม์ไลน์บันทึกการกำหนดระดับความสำคัญ',
+    (repri.j.timeline||[]).some(e => e.kind === 'priority'));
+
   // เจ้าหน้าที่ได้รับการแจ้งเตือน
   const techNotifs = (await req('GET','/notifications', tech)).j;
   check('เจ้าหน้าที่ได้รับแจ้งเตือนการมอบหมาย',

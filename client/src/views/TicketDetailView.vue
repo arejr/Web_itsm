@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useMetaStore } from '@/stores/meta';
 import { useTicketStore } from '@/stores/tickets';
 import { useUiStore } from '@/stores/ui';
-import { PRIORITY, STATUS, STATUS_TRACK, prio, stat } from '@/services/lookups';
+import { PRIORITY, PRIORITY_ORDER, STATUS, STATUS_TRACK, prio, stat } from '@/services/lookups';
 import { thDateTime, timeOnly, relTime, fileSize } from '@/services/format';
 
 const route = useRoute();
@@ -204,6 +204,21 @@ async function setCategory(cat) {
     const { data } = await api.patch(`/tickets/${t.value._id}/triage`, { categoryId: cat._id });
     store.upsert(data);
     ui.success(`จัดหมวดหมู่เป็น ${cat.label} แล้ว`);
+  } catch (err) {
+    ui.error(errMsg(err));
+  } finally {
+    busy.value = false;
+  }
+}
+
+// เปลี่ยนระดับความสำคัญแล้วกำหนดเสร็จจะถูกคำนวณใหม่ตามระดับที่เลือกโดยอัตโนมัติ
+async function setPriority(p) {
+  if (busy.value || t.value.priority === p) return;
+  busy.value = true;
+  try {
+    const { data } = await api.patch(`/tickets/${t.value._id}/triage`, { priority: p });
+    store.upsert(data);
+    ui.success(`กำหนดระดับความสำคัญเป็น ${PRIORITY[p].label} แล้ว`);
   } catch (err) {
     ui.error(errMsg(err));
   } finally {
@@ -426,6 +441,22 @@ function goBack() {
                   @click="setCategory(c)"
                 >
                   {{ c.label }}
+                </button>
+              </div>
+
+              <span class="meta-label">ระดับความสำคัญ</span>
+              <div class="triage-chips">
+                <button
+                  v-for="p in PRIORITY_ORDER"
+                  :key="p"
+                  type="button"
+                  class="chip"
+                  :class="{ 'is-active': t.priority === p }"
+                  :style="t.priority === p ? { background: PRIORITY[p].bg, color: PRIORITY[p].fg, borderColor: PRIORITY[p].dot } : {}"
+                  :disabled="busy"
+                  @click="setPriority(p)"
+                >
+                  {{ PRIORITY[p].label }}
                 </button>
               </div>
             </div>
@@ -701,6 +732,7 @@ function goBack() {
 .resolution-box { padding: 12px; border-radius: 9px; background: var(--ok-soft); border: 1px solid #d6e6bd; display: flex; flex-direction: column; gap: 4px; }
 .triage-block { display: flex; flex-direction: column; gap: 8px; }
 .triage-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.triage-chips + .meta-label { margin-top: 5px; }
 .resolution-box__text { font: 400 12.5px/1.8 var(--font-th); color: var(--ink-2); white-space: pre-line; }
 .closed-hint { font: 400 11.5px var(--font-th); color: var(--muted-2); text-align: center; }
 .admin-state { display: flex; flex-direction: column; gap: 11px; padding: 12px; border-radius: 9px; background: var(--surface-2); border: 1px solid rgba(16, 24, 32, 0.07); }
