@@ -58,8 +58,6 @@ function open(t) {
       >
         {{ t.label }} · {{ t.count }}
       </button>
-      <div class="flex-fill"></div>
-      <RouterLink v-if="auth.isEmployee" :to="{ name: 'new-ticket' }" class="btn-brand">+ แจ้งปัญหาใหม่</RouterLink>
     </div>
 
     <LoadingRows v-if="store.loading" :rows="4" :height="86" />
