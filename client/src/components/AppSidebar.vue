@@ -30,8 +30,8 @@ const NAV_BY_ROLE = {
     { name: 'kb', label: 'ฐานความรู้', en: 'Knowledge Base' }
   ],
   tech: [
-    { name: 'board', label: 'งานที่ได้รับมอบหมาย', en: 'My Assignments', badge: 'mine' },
     { name: 'dashboard', label: 'ภาพรวมงานของฉัน', en: 'Dashboard' },
+    { name: 'board', label: 'งานที่ได้รับมอบหมาย', en: 'My Assignments', badge: 'mine' },
     { name: 'queue', label: 'ตั๋วงานทั้งหมด', en: 'All Tickets' },
     { name: 'kb', label: 'ฐานความรู้', en: 'Knowledge Base' }
   ],

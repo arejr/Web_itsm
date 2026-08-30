@@ -50,7 +50,7 @@ const router = createRouter({
 export const HOME_BY_ROLE = {
   admin: 'dashboard',
   helpdesk: 'queue',
-  tech: 'board',
+  tech: 'dashboard',
   employee: 'my-tickets'
 };
 
