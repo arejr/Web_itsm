@@ -509,6 +509,20 @@ function goBack() {
             </template>
 
             <template v-else>
+            <button v-if="showTransferButton" class="btn-ghost w-100" type="button" @click="toggleTransfer">
+              มอบหมายงาน
+            </button>
+
+            <div v-if="showTransfer && showTransferButton" class="transfer-box">
+              <select v-model="transferTo" class="input input--sm">
+                <option value="">— เลือกเจ้าหน้าที่ที่จะมอบหมาย —</option>
+                <option v-for="tech in meta.technicians" :key="tech._id" :value="tech._id">
+                  {{ tech.name }} · {{ tech.skill }} ({{ tech.load }} งาน)
+                </option>
+              </select>
+              <button class="btn-brand w-100" type="button" :disabled="busy" @click="doTransfer">ยืนยันการมอบหมาย</button>
+            </div>
+
             <button class="btn-green w-100" type="button" :disabled="busy" @click="toggleResolve">
               บันทึกและปิดตั๋วงาน
             </button>
@@ -535,20 +549,6 @@ function goBack() {
                   ยืนยันปิดตั๋วงาน
                 </button>
               </div>
-            </div>
-
-            <button v-if="showTransferButton" class="btn-ghost w-100" type="button" @click="toggleTransfer">
-              มอบหมายงาน
-            </button>
-
-            <div v-if="showTransfer && showTransferButton" class="transfer-box">
-              <select v-model="transferTo" class="input input--sm">
-                <option value="">— เลือกเจ้าหน้าที่ที่จะมอบหมาย —</option>
-                <option v-for="tech in meta.technicians" :key="tech._id" :value="tech._id">
-                  {{ tech.name }} · {{ tech.skill }} ({{ tech.load }} งาน)
-                </option>
-              </select>
-              <button class="btn-brand w-100" type="button" :disabled="busy" @click="doTransfer">ยืนยันการมอบหมาย</button>
             </div>
 
             <button
