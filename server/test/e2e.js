@@ -199,10 +199,10 @@ async function req(m, path, t, body) {
   check('Admin ลบผู้ใช้ได้', del.status === 200);
 
   // 9. Admin: หมวดหมู่ + ประกาศ
-  const nc = await req('POST','/categories', admin, { label:'ทดสอบหมวดหมู่', slaHours: 6, color:'#123456' });
+  const nc = await req('POST','/categories', admin, { label:'ทดสอบหมวดหมู่', color:'#123456' });
   check('Admin เพิ่มหมวดหมู่ได้', nc.status === 201, nc.j.message||'');
-  const uc = await req('PATCH', `/categories/${nc.j._id}`, admin, { slaHours: 12 });
-  check('Admin แก้ไขหมวดหมู่ได้', uc.status === 200 && uc.j.slaHours === 12);
+  const uc = await req('PATCH', `/categories/${nc.j._id}`, admin, { label: 'ทดสอบหมวดหมู่ (แก้แล้ว)' });
+  check('Admin แก้ไขหมวดหมู่ได้', uc.status === 200 && uc.j.label === 'ทดสอบหมวดหมู่ (แก้แล้ว)', uc.j.message||'');
   check('Admin ลบหมวดหมู่ได้', (await req('DELETE', `/categories/${nc.j._id}`, admin)).status === 200);
 
   const na = await req('POST','/announcements', admin, { title:'ทดสอบประกาศ E2E', whenText:'คืนนี้ 22:00', published:true });
