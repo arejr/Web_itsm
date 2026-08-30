@@ -28,6 +28,8 @@ const busy = ref(false);
 const chatBox = ref(null);
 const showTransfer = ref(false);
 const transferTo = ref('');
+const showResolve = ref(false);
+const noteBox = ref(null);
 let typingTimer = null;
 
 const ticketId = computed(() => route.params.id);
@@ -157,6 +159,24 @@ async function setStatus(status) {
   }
 }
 
+function toggleResolve() {
+  showResolve.value = !showResolve.value;
+  if (!showResolve.value) return;
+  showTransfer.value = false;
+  nextTick(() => noteBox.value?.focus());
+}
+
+function closeResolve() {
+  showResolve.value = false;
+  note.value = '';
+  publishKb.value = false;
+}
+
+function toggleTransfer() {
+  showTransfer.value = !showTransfer.value;
+  if (showTransfer.value) showResolve.value = false;
+}
+
 async function resolveTicket() {
   if (!note.value.trim()) {
     ui.error('กรุณาบันทึกวิธีแก้ปัญหา (Resolution Note) ก่อนปิดตั๋วงาน');
@@ -170,6 +190,7 @@ async function resolveTicket() {
     });
     store.upsert(data.ticket);
     ui.success(data.article ? `ปิดตั๋วงานและเผยแพร่เป็น ${data.article.ref} แล้ว` : 'ปิดตั๋วงานเรียบร้อยแล้ว');
+    closeResolve();
   } catch (err) {
     ui.error(errMsg(err));
   } finally {
@@ -488,22 +509,35 @@ function goBack() {
             </template>
 
             <template v-else>
-            <textarea
-              v-model="note"
-              class="input input--sm"
-              rows="4"
-              placeholder="Resolution Note — บันทึกวิธีแก้ไขเพื่อเก็บเป็นฐานความรู้"
-            ></textarea>
-
-            <label class="kb-check">
-              <input v-model="publishKb" type="checkbox" /> เผยแพร่เข้าฐานความรู้ (KB)
-            </label>
-
-            <button class="btn-green w-100" type="button" :disabled="busy" @click="resolveTicket">
+            <button class="btn-green w-100" type="button" :disabled="busy" @click="toggleResolve">
               บันทึกและปิดตั๋วงาน
             </button>
 
-            <button v-if="showTransferButton" class="btn-ghost w-100" type="button" @click="showTransfer = !showTransfer">
+            <!-- ช่องบันทึกวิธีแก้จะเปิดออกมาหลังกดปิดตั๋วงาน ไม่ได้แสดงค้างไว้ตลอด -->
+            <div v-if="showResolve" class="resolve-box">
+              <textarea
+                ref="noteBox"
+                v-model="note"
+                class="input input--sm"
+                rows="4"
+                placeholder="Resolution Note — บันทึกวิธีแก้ไขเพื่อเก็บเป็นฐานความรู้"
+              ></textarea>
+
+              <label class="kb-check">
+                <input v-model="publishKb" type="checkbox" /> เผยแพร่เข้าฐานความรู้ (KB)
+              </label>
+
+              <div class="d-flex gap-2">
+                <button class="btn-ghost flex-fill" type="button" :disabled="busy" @click="closeResolve">
+                  ยกเลิก
+                </button>
+                <button class="btn-green flex-fill" type="button" :disabled="busy" @click="resolveTicket">
+                  ยืนยันปิดตั๋วงาน
+                </button>
+              </div>
+            </div>
+
+            <button v-if="showTransferButton" class="btn-ghost w-100" type="button" @click="toggleTransfer">
               มอบหมายงาน
             </button>
 
@@ -730,6 +764,7 @@ function goBack() {
   font: 400 12px/1.7 var(--font-th); color: var(--ink-3);
 }
 .resolution-box { padding: 12px; border-radius: 9px; background: var(--ok-soft); border: 1px solid #d6e6bd; display: flex; flex-direction: column; gap: 4px; }
+.resolve-box { display: flex; flex-direction: column; gap: 10px; }
 .triage-block { display: flex; flex-direction: column; gap: 8px; }
 .triage-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .triage-chips + .meta-label { margin-top: 5px; }
