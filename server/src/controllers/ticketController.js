@@ -11,7 +11,7 @@ const { notify } = require('../utils/notify');
 const { PRIORITY_SLA_MINUTES, PRIORITY_LABEL, STATUSES } = require('../config/constants');
 
 const POPULATE = [
-  { path: 'category', select: 'key label color slaHours' },
+  { path: 'category', select: 'key label color' },
   { path: 'assignee', select: 'name email role group skill' },
   { path: 'requester', select: 'name email department phone contact company orgCode' }
 ];

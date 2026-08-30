@@ -10,7 +10,7 @@ const ui = useUiStore();
 
 const announcements = ref([]);
 const editingCat = ref(null);
-const catForm = ref({ label: '', description: '', color: '#14776b', slaHours: 24, defaultGroup: '' });
+const catForm = ref({ label: '', description: '', color: '#14776b' });
 const showCatForm = ref(false);
 const showAnnForm = ref(false);
 const annForm = ref({ title: '', body: '', whenText: '', tag: 'กำลังจะถึง', published: true });
@@ -34,8 +34,8 @@ onMounted(loadAll);
 function startCat(c) {
   editingCat.value = c || null;
   catForm.value = c
-    ? { label: c.label, description: c.description, color: c.color, slaHours: c.slaHours, defaultGroup: c.defaultGroup }
-    : { label: '', description: '', color: '#14776b', slaHours: 24, defaultGroup: '' };
+    ? { label: c.label, description: c.description, color: c.color }
+    : { label: '', description: '', color: '#14776b' };
   showCatForm.value = true;
 }
 
@@ -135,7 +135,6 @@ async function removeAnn(a) {
           <span class="cat-row__label">{{ c.label }}</span>
           <span class="cat-row__sub text-truncate">{{ c.description || '—' }}</span>
         </div>
-        <span class="mono cat-row__sla">กำหนดเสร็จ {{ c.slaHours }} ชม.</span>
         <button class="btn-ghost btn-xs" type="button" @click="startCat(c)">แก้ไข</button>
         <button class="btn-ghost btn-xs" style="color: var(--danger-ink)" type="button" @click="removeCat(c)">ลบ</button>
       </div>
@@ -145,11 +144,7 @@ async function removeAnn(a) {
       <div v-if="showCatForm" class="inline-form">
         <input v-model="catForm.label" class="input input--sm" placeholder="ชื่อหมวดหมู่" />
         <input v-model="catForm.description" class="input input--sm" placeholder="คำอธิบายสั้น ๆ" />
-        <div class="d-flex gap-2">
-          <input v-model="catForm.color" class="input input--sm color-input" type="color" />
-          <input v-model.number="catForm.slaHours" class="input input--sm" type="number" min="1" placeholder="กำหนดเสร็จ (ชม.)" />
-        </div>
-        <input v-model="catForm.defaultGroup" class="input input--sm" placeholder="กลุ่มงานที่รับผิดชอบ" />
+        <input v-model="catForm.color" class="input input--sm color-input" type="color" />
         <div class="d-flex gap-2">
           <button class="btn-brand" type="button" @click="saveCat">บันทึก</button>
           <button class="btn-ghost" type="button" @click="showCatForm = false">ยกเลิก</button>
@@ -222,7 +217,6 @@ async function removeAnn(a) {
 .cat-row { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); flex-wrap: wrap; }
 .cat-row__label { font: 500 12.5px var(--font-th); }
 .cat-row__sub { font: 400 11px var(--font-th); color: var(--muted-2); }
-.cat-row__sla { font: 400 11px var(--font-mono); color: var(--muted-2); }
 
 .prio-row { display: grid; grid-template-columns: 100px minmax(0, 1fr) 90px; align-items: center; gap: 12px; padding: 9px 12px; border-radius: var(--radius); }
 .prio-row__label { font: 600 12px var(--font-mono); }

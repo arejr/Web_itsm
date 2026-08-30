@@ -27,16 +27,16 @@ async function seedDatabase() {
 
   /* ---------- หมวดหมู่ปัญหา ---------- */
   const categories = await Category.create([
-    { key: 'hardware', label: 'Hardware', color: '#c0392b', slaHours: 4, order: 0,
-      description: 'เครื่องคอม อุปกรณ์ต่อพ่วง เครื่องพิมพ์', defaultGroup: 'Desktop Support' },
-    { key: 'software', label: 'Software', color: '#14776b', slaHours: 8, order: 1,
-      description: 'โปรแกรมองค์กร ระบบภายใน', defaultGroup: 'Application Support' },
-    { key: 'network', label: 'Network', color: '#7b5cd6', slaHours: 4, order: 2,
-      description: 'เครือข่าย Wi-Fi VPN', defaultGroup: 'Infrastructure' },
-    { key: 'account', label: 'บัญชี/สิทธิ์', color: '#d97706', slaHours: 24, order: 3,
-      description: 'สิทธิ์เข้าถึง รหัสผ่าน อีเมล', defaultGroup: 'Infrastructure' },
-    { key: 'other', label: 'อื่น ๆ', color: '#69737b', slaHours: 48, order: 4,
-      description: 'ที่ไม่เข้าหมวดข้างต้น', defaultGroup: 'IT Helpdesk' }
+    { key: 'hardware', label: 'Hardware', color: '#c0392b', order: 0,
+      description: 'เครื่องคอม อุปกรณ์ต่อพ่วง เครื่องพิมพ์' },
+    { key: 'software', label: 'Software', color: '#14776b', order: 1,
+      description: 'โปรแกรมองค์กร ระบบภายใน' },
+    { key: 'network', label: 'Network', color: '#7b5cd6', order: 2,
+      description: 'เครือข่าย Wi-Fi VPN' },
+    { key: 'account', label: 'บัญชี/สิทธิ์', color: '#d97706', order: 3,
+      description: 'สิทธิ์เข้าถึง รหัสผ่าน อีเมล' },
+    { key: 'other', label: 'อื่น ๆ', color: '#69737b', order: 4,
+      description: 'ที่ไม่เข้าหมวดข้างต้น' }
   ]);
   const cat = Object.fromEntries(categories.map((c) => [c.key, c]));
   console.log(`[seed] หมวดหมู่ ${categories.length} รายการ`);
