@@ -152,7 +152,7 @@ async function submit() {
   <div class="new-layout">
     <form class="card-surface new-form" @submit.prevent="submit">
       <div v-if="canAssign">
-        <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง (ถ้าเว้นว่าง จะออกตั๋วในชื่อคุณเอง)</label>
+        <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง</label>
         <input
           id="nt-requester"
           v-model="form.requesterEmployeeId"
