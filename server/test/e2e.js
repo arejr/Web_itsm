@@ -99,6 +99,16 @@ async function req(m, path, t, body) {
   check('พนักงานแจ้งแทนคนอื่นไม่ได้ (ถูกเมิน)',
     empBehalf.status === 201 && empBehalf.j.requesterName === 'อัสนียา นาคสิงห์', empBehalf.j.requesterName);
 
+  // เลือกระดับความสำคัญได้ตั้งแต่ตอนออกตั๋ว และกำหนดเสร็จต้องคิดตามระดับนั้น
+  const urgent = await req('POST','/tickets', helpdesk, {
+    title:'ทดสอบ E2E — ออกตั๋วระดับ Critical', description:'x', priority:'critical'
+  });
+  check('เลือกระดับความสำคัญได้ตั้งแต่ตอนออกตั๋ว',
+    urgent.status === 201 && urgent.j.priority === 'critical', urgent.j.priority || urgent.j.message);
+  check('กำหนดเสร็จของตั๋วด่วนสั้นกว่าตั๋วธรรมดา',
+    new Date(urgent.j.slaDueAt) < new Date(deskTicket.j.slaDueAt),
+    `${urgent.j.slaDueAt} < ${deskTicket.j.slaDueAt}`);
+
   // ช่องทางการรับเรื่อง — Helpdesk บันทึกได้ว่ารับเรื่องมาทางไหน
   const byPhone = await req('POST','/tickets', helpdesk, {
     title:'ทดสอบ E2E — รับเรื่องทางโทรศัพท์', description:'x', channel:'โทรศัพท์'

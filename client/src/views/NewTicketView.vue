@@ -7,6 +7,7 @@ import { useMetaStore } from '@/stores/meta';
 import { useTicketStore } from '@/stores/tickets';
 import { useUiStore } from '@/stores/ui';
 import { fileSize } from '@/services/format';
+import { PRIORITY, PRIORITY_ORDER } from '@/services/lookups';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -16,7 +17,7 @@ const ui = useUiStore();
 
 const form = ref({
   title: '', description: '', categoryId: '', location: '', asset: '',
-  assigneeId: '', channel: 'เว็บไซต์', requesterEmployeeId: ''
+  assigneeId: '', channel: 'เว็บไซต์', priority: 'medium', requesterEmployeeId: ''
 });
 
 // ค้นหาพนักงานจากรหัสที่กรอก เพื่อยืนยันว่าออกตั๋วให้ถูกคนก่อนกดส่ง
@@ -90,6 +91,7 @@ const missingFields = computed(() => {
   if (!f.categoryId) missing.push('หมวดหมู่');
   if (!f.location.trim()) missing.push('สถานที่เกิดเหตุ');
   if (!f.channel) missing.push('ช่องทางการรับเรื่อง');
+  if (!f.priority) missing.push('ระดับความสำคัญ');
   if (!f.assigneeId) missing.push('มอบหมายเจ้าหน้าที่');
   return missing;
 });
@@ -122,6 +124,7 @@ async function submit() {
     Object.entries(form.value).forEach(([k, v]) => {
       if (k === 'assigneeId' && !v) return; // ไม่เลือกผู้รับผิดชอบ = ส่งเข้าคิวคัดกรองตามปกติ
       if (k === 'channel' && !canAssign.value) return; // พนักงานแจ้งผ่านหน้าเว็บเสมอ
+      if (k === 'priority' && !canAssign.value) return; // ระดับความสำคัญเป็นหน้าที่ของ Helpdesk
       if (k === 'requesterEmployeeId' && (!canAssign.value || !v.trim())) return; // ไม่ระบุ = ออกตั๋วในชื่อตัวเอง
       body.append(k, v);
     });
@@ -212,19 +215,37 @@ async function submit() {
         <input id="nt-asset" v-model="form.asset" class="input" />
       </div>
 
-      <div v-if="canAssign">
-        <span class="field-label">ช่องทางการรับเรื่อง *</span>
-        <div class="d-flex flex-wrap gap-1">
-          <button
-            v-for="ch in CHANNELS"
-            :key="ch"
-            type="button"
-            class="chip"
-            :class="{ 'is-active': form.channel === ch }"
-            @click="form.channel = ch"
-          >
-            {{ ch }}
-          </button>
+      <div v-if="canAssign" class="new-form__row">
+        <div>
+          <span class="field-label">ช่องทางการรับเรื่อง *</span>
+          <div class="d-flex flex-wrap gap-1">
+            <button
+              v-for="ch in CHANNELS"
+              :key="ch"
+              type="button"
+              class="chip"
+              :class="{ 'is-active': form.channel === ch }"
+              @click="form.channel = ch"
+            >
+              {{ ch }}
+            </button>
+          </div>
+        </div>
+        <div>
+          <span class="field-label">ระดับความสำคัญ *</span>
+          <div class="d-flex flex-wrap gap-1">
+            <button
+              v-for="p in PRIORITY_ORDER"
+              :key="p"
+              type="button"
+              class="chip"
+              :class="{ 'is-active': form.priority === p }"
+              :style="form.priority === p ? { background: PRIORITY[p].bg, color: PRIORITY[p].fg, borderColor: PRIORITY[p].dot } : {}"
+              @click="form.priority = p"
+            >
+              {{ PRIORITY[p].label }}
+            </button>
+          </div>
         </div>
       </div>
 
