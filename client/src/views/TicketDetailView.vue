@@ -339,10 +339,7 @@ function goBack() {
           <div class="record__section record__grid">
             <div class="d-flex flex-column gap-3">
               <div class="d-flex align-items-center gap-3">
-                <div class="position-relative">
-                  <div class="avatar avatar--lg">{{ t.requesterInitial }}</div>
-                  <span class="presence" :style="{ background: t.slaRisk ? '#c0392b' : '#6cb33f' }"></span>
-                </div>
+                <div class="avatar avatar--lg">{{ t.requesterInitial }}</div>
                 <div class="d-flex flex-column gap-1">
                   <span class="meta-label">ผู้แจ้งปัญหา</span>
                   <span class="record__requester">{{ t.requesterDisplay }}</span>
@@ -670,7 +667,6 @@ function goBack() {
 .record__requester { font: 500 19px var(--font-th); letter-spacing: -0.2px; }
 .record__desc { font: 400 13.5px/1.9 var(--font-th); color: var(--ink-strong); white-space: pre-line; }
 
-.presence { position: absolute; right: 1px; bottom: 2px; width: 13px; height: 13px; border-radius: 50%; border: 2px solid #fff; }
 .contact-icon { width: 16px; text-align: center; color: #2b8a6b; flex: none; }
 .contact-link { font-size: 12.5px; color: var(--brand-ink); }
 
