@@ -377,6 +377,7 @@ function goBack() {
             <div class="d-flex flex-column gap-3">
               <div><span class="meta-label">บริการที่ได้รับผลกระทบ</span><span class="meta-value">{{ t.service || '—' }}</span></div>
               <div><span class="meta-label">หมวดหมู่ปัญหา</span><span class="meta-value">{{ t.categoryLabel }}</span></div>
+              <div><span class="meta-label">ช่องทางการรับเรื่อง</span><span class="meta-value">{{ t.channel || '—' }}</span></div>
             </div>
             <div class="d-flex flex-column gap-3">
               <div><span class="meta-label">อุปกรณ์ที่ได้รับผลกระทบ</span><span class="meta-value mono">{{ t.asset || '—' }}</span></div>

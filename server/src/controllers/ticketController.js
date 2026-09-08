@@ -8,7 +8,7 @@ const Counter = require('../models/Counter');
 const { nextTicketCode } = require('../utils/ticketCode');
 const { serializeTicket } = require('../utils/serialize');
 const { notify } = require('../utils/notify');
-const { PRIORITY_SLA_MINUTES, PRIORITY_LABEL, STATUSES } = require('../config/constants');
+const { PRIORITY_SLA_MINUTES, PRIORITY_LABEL, STATUSES, CHANNELS } = require('../config/constants');
 
 const POPULATE = [
   { path: 'category', select: 'key label color' },
@@ -132,13 +132,22 @@ exports.get = async (req, res, next) => {
 // POST /api/tickets — พนักงานแจ้งปัญหา หรือ Helpdesk ออกตั๋วแทน
 exports.create = async (req, res, next) => {
   try {
-    const { title, description, categoryId, priority, location, asset, service, isDraft, assigneeId } = req.body;
+    const { title, description, categoryId, priority, location, asset, service, isDraft, assigneeId, channel } = req.body;
 
     if (!title || !String(title).trim()) {
       return res.status(400).json({ message: 'กรุณาระบุชื่อปัญหา' });
     }
 
     const category = categoryId ? await Category.findById(categoryId) : await Category.findOne({ key: 'other' });
+
+    // Helpdesk บันทึกได้ว่ารับเรื่องมาทางไหน ส่วนพนักงานแจ้งผ่านหน้าเว็บเสมอ
+    let intake = 'เว็บไซต์';
+    if (channel && req.user.role === 'helpdesk') {
+      if (!CHANNELS.includes(channel)) {
+        return res.status(400).json({ message: 'ช่องทางการรับเรื่องไม่ถูกต้อง' });
+      }
+      intake = channel;
+    }
 
     // Helpdesk มอบหมายงานได้ตั้งแต่ตอนออกตั๋ว ส่วนพนักงานทั่วไปเลือกผู้รับผิดชอบเองไม่ได้
     let assignedUser = null;
@@ -171,7 +180,7 @@ exports.create = async (req, res, next) => {
       asset: asset || '',
       service: service || category?.label || '',
       productCategory: category ? `${category.label}` : '',
-      channel: 'เว็บไซต์',
+      channel: intake,
       slaDueAt: slaDueFrom(prio),
       isDraft: !!isDraft
     });

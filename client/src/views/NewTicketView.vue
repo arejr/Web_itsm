@@ -14,7 +14,13 @@ const meta = useMetaStore();
 const store = useTicketStore();
 const ui = useUiStore();
 
-const form = ref({ title: '', description: '', categoryId: '', location: '', asset: '', assigneeId: '' });
+const form = ref({
+  title: '', description: '', categoryId: '', location: '', asset: '',
+  assigneeId: '', channel: 'เว็บไซต์'
+});
+
+// ช่องทางที่ผู้แจ้งติดต่อเข้ามา — ตรงกับ CHANNELS ฝั่งเซิร์ฟเวอร์
+const CHANNELS = ['เว็บไซต์', 'โทรศัพท์', 'Walk-in', 'อีเมล', 'LINE / แชท'];
 
 // Helpdesk ที่ออกตั๋วเองมอบหมายผู้รับผิดชอบได้เลย ไม่ต้องรอคัดกรองอีกรอบ
 const canAssign = computed(() => auth.isHelpdesk);
@@ -64,6 +70,7 @@ async function submit() {
     const body = new FormData();
     Object.entries(form.value).forEach(([k, v]) => {
       if (k === 'assigneeId' && !v) return; // ไม่เลือกผู้รับผิดชอบ = ส่งเข้าคิวคัดกรองตามปกติ
+      if (k === 'channel' && !canAssign.value) return; // พนักงานแจ้งผ่านหน้าเว็บเสมอ
       body.append(k, v);
     });
     files.value.forEach((f) => body.append('attachments', f));
@@ -128,6 +135,22 @@ async function submit() {
       <div>
         <label class="field-label" for="nt-asset">อุปกรณ์ที่เกี่ยวข้อง (ถ้ามี)</label>
         <input id="nt-asset" v-model="form.asset" class="input" placeholder="เช่น PRN-3F-02, NB-HR-0142" />
+      </div>
+
+      <div v-if="canAssign">
+        <span class="field-label">ช่องทางการรับเรื่อง</span>
+        <div class="d-flex flex-wrap gap-1">
+          <button
+            v-for="ch in CHANNELS"
+            :key="ch"
+            type="button"
+            class="chip"
+            :class="{ 'is-active': form.channel === ch }"
+            @click="form.channel = ch"
+          >
+            {{ ch }}
+          </button>
+        </div>
       </div>
 
       <div v-if="canAssign">

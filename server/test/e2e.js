@@ -71,6 +71,20 @@ async function req(m, path, t, body) {
   check('พนักงานเลือกผู้รับผิดชอบเองไม่ได้ (ถูกเมิน)',
     empAssign.status === 201 && !empAssign.j.assignee, empAssign.j.assignee?.name || '');
 
+  // ช่องทางการรับเรื่อง — Helpdesk บันทึกได้ว่ารับเรื่องมาทางไหน
+  const byPhone = await req('POST','/tickets', helpdesk, {
+    title:'ทดสอบ E2E — รับเรื่องทางโทรศัพท์', description:'x', channel:'โทรศัพท์'
+  });
+  check('Helpdesk บันทึกช่องทางการรับเรื่องได้',
+    byPhone.status === 201 && byPhone.j.channel === 'โทรศัพท์', byPhone.j.channel || byPhone.j.message);
+  check('ไม่ระบุช่องทางแล้วได้ค่าเริ่มต้นเป็นเว็บไซต์',
+    deskTicket.j.channel === 'เว็บไซต์', deskTicket.j.channel);
+  check('ช่องทางที่ไม่มีในรายการถูกปฏิเสธ',
+    (await req('POST','/tickets', helpdesk, { title:'x', description:'x', channel:'นกพิราบสื่อสาร' })).status === 400);
+  const empChannel = await req('POST','/tickets', emp, { title:'x', description:'x', channel:'โทรศัพท์' });
+  check('พนักงานกำหนดช่องทางเองไม่ได้ (ถูกเมิน)',
+    empChannel.status === 201 && empChannel.j.channel === 'เว็บไซต์', empChannel.j.channel);
+
   check('เจ้าหน้าที่ IT ออกตั๋วเองไม่ได้',
     (await req('POST','/tickets', tech, { title:'x', description:'x' })).status === 403);
   check('ผู้ดูแลระบบออกตั๋วเองไม่ได้',
