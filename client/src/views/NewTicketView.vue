@@ -151,24 +151,31 @@ async function submit() {
 <template>
   <div class="new-layout">
     <form class="card-surface new-form" @submit.prevent="submit">
-      <div v-if="canAssign" class="requester-field">
-        <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง</label>
-        <input
-          id="nt-requester"
-          v-model="form.requesterEmployeeId"
-          class="input"
-          autocomplete="off"
-        />
-        <p v-if="lookingUp" class="requester-hint mb-0">กำลังค้นหา…</p>
-        <p v-else-if="requesterError" class="requester-hint requester-hint--err mb-0">{{ requesterError }}</p>
-        <div v-else-if="requesterInfo" class="requester-card">
-          <span class="avatar avatar--sm">{{ requesterInfo.name.charAt(0) }}</span>
-          <span class="d-flex flex-column min-w-0">
-            <span class="requester-card__name text-truncate">{{ requesterInfo.name }}</span>
-            <span class="requester-card__sub text-truncate">
-              {{ requesterInfo.department || 'ไม่ระบุแผนก' }} · {{ requesterInfo.email }}
-            </span>
-          </span>
+      <div v-if="canAssign" class="new-form__row">
+        <div>
+          <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง</label>
+          <input
+            id="nt-requester"
+            v-model="form.requesterEmployeeId"
+            class="input"
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <label class="field-label" for="nt-requester-name">ชื่อพนักงาน</label>
+          <!-- ระบบเติมให้จากรหัสที่กรอก แก้เองไม่ได้ เพราะตั๋วต้องผูกกับบัญชีจริง -->
+          <input
+            id="nt-requester-name"
+            class="input"
+            :value="requesterInfo ? requesterInfo.name : ''"
+            readonly
+            tabindex="-1"
+          />
+          <p v-if="lookingUp" class="requester-hint mb-0">กำลังค้นหา…</p>
+          <p v-else-if="requesterError" class="requester-hint requester-hint--err mb-0">{{ requesterError }}</p>
+          <p v-else-if="requesterInfo" class="requester-hint mb-0">
+            {{ requesterInfo.department || 'ไม่ระบุแผนก' }} · {{ requesterInfo.email }}
+          </p>
         </div>
       </div>
 
@@ -327,17 +334,10 @@ async function submit() {
 /* ไม่มีแผงช่วยเหลือด้านข้าง (Helpdesk) ให้ฟอร์มกินเต็มความกว้าง */
 .new-layout:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
 .new-form { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
-/* รหัสพนักงานเป็นข้อความสั้น ๆ ไม่ต้องใช้ช่องเต็มความกว้างเหมือนช่องอื่น */
-.requester-field { max-width: 420px; }
 .requester-hint { margin-top: 6px; font: 400 11.5px var(--font-th); color: var(--muted-2); }
 .requester-hint--err { color: var(--danger-ink); }
-.requester-card {
-  margin-top: 8px; display: flex; align-items: center; gap: 10px;
-  padding: 9px 11px; border-radius: var(--radius);
-  background: var(--brand-tint); border: 1px solid var(--brand);
-}
-.requester-card__name { font: 500 12.5px var(--font-th); }
-.requester-card__sub { font: 400 11px var(--font-th); color: var(--muted); }
+/* ช่องชื่อพนักงานระบบเติมให้เอง ไม่ใช่ช่องที่กรอกได้ จึงทำให้ดูจางลง */
+input[readonly].input { background: var(--surface-2); color: var(--ink-2); cursor: default; }
 .new-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .new-form__foot {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
