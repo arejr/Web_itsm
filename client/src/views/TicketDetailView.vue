@@ -161,11 +161,29 @@ async function setStatus(status) {
     const { data } = await api.patch(`/tickets/${t.value._id}/status`, { status });
     store.upsert(data);
     ui.success(`อัปเดตสถานะเป็น ${stat(status).label} แล้ว`);
+    return true;
   } catch (err) {
     ui.error(errMsg(err));
+    return false;
   } finally {
     busy.value = false;
   }
+}
+
+/**
+ * เจ้าหน้าที่ IT กดรับงาน — ถามยืนยันก่อนเพราะเป็นการประกาศว่าเริ่มลงมือแล้ว
+ * รับงานสำเร็จแล้วพากลับหน้างานที่ได้รับมอบหมาย จะได้เห็นการ์ดย้ายไปคอลัมน์
+ * กำลังดำเนินการ และหยิบงานถัดไปทำต่อได้เลย
+ */
+async function startWork(status) {
+  const yes = await ui.confirm({
+    title: 'ต้องการรับงานนี้ใช่หรือไม่',
+    text: `${t.value.code} · ${t.value.title} — สถานะจะเปลี่ยนเป็น${stat(status).label}`,
+    okLabel: 'รับงาน',
+    cancelLabel: 'ยังไม่รับ'
+  });
+  if (!yes) return;
+  if (await setStatus(status)) router.push({ name: 'board' });
 }
 
 function toggleResolve() {
@@ -468,7 +486,7 @@ function goBack() {
                 :class="{ 'is-active': t.status === s }"
                 :style="t.status === s ? { background: STATUS[s].bg, color: STATUS[s].fg, borderColor: STATUS[s].fg } : {}"
                 :disabled="busy"
-                @click="setStatus(s)"
+                @click="startWork(s)"
               >
                 {{ STATUS[s].label }}
               </button>
