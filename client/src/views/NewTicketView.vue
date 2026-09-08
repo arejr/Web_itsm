@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api, { errMsg } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -16,8 +16,39 @@ const ui = useUiStore();
 
 const form = ref({
   title: '', description: '', categoryId: '', location: '', asset: '',
-  assigneeId: '', channel: 'เว็บไซต์'
+  assigneeId: '', channel: 'เว็บไซต์', requesterEmployeeId: ''
 });
+
+// ค้นหาพนักงานจากรหัสที่กรอก เพื่อยืนยันว่าออกตั๋วให้ถูกคนก่อนกดส่ง
+const requesterInfo = ref(null);
+const requesterError = ref('');
+const lookingUp = ref(false);
+let lookupTimer = null;
+
+async function lookupRequester() {
+  const code = form.value.requesterEmployeeId.trim();
+  requesterInfo.value = null;
+  requesterError.value = '';
+  if (!code) return;
+  lookingUp.value = true;
+  try {
+    const { data } = await api.get('/users/lookup', { params: { employeeId: code } });
+    requesterInfo.value = data;
+  } catch (err) {
+    requesterError.value = errMsg(err);
+  } finally {
+    lookingUp.value = false;
+  }
+}
+
+// หน่วงไว้ก่อนยิงค้นหา จะได้ไม่ยิงทุกตัวอักษรที่พิมพ์
+watch(() => form.value.requesterEmployeeId, () => {
+  requesterInfo.value = null;
+  requesterError.value = '';
+  clearTimeout(lookupTimer);
+  lookupTimer = setTimeout(lookupRequester, 400);
+});
+onBeforeUnmount(() => clearTimeout(lookupTimer));
 
 // ช่องทางที่ผู้แจ้งติดต่อเข้ามา — ตรงกับ CHANNELS ฝั่งเซิร์ฟเวอร์
 const CHANNELS = ['เว็บไซต์', 'โทรศัพท์', 'Walk-in', 'อีเมล', 'LINE / แชท'];
@@ -73,6 +104,7 @@ async function submit() {
     Object.entries(form.value).forEach(([k, v]) => {
       if (k === 'assigneeId' && !v) return; // ไม่เลือกผู้รับผิดชอบ = ส่งเข้าคิวคัดกรองตามปกติ
       if (k === 'channel' && !canAssign.value) return; // พนักงานแจ้งผ่านหน้าเว็บเสมอ
+      if (k === 'requesterEmployeeId' && (!canAssign.value || !v.trim())) return; // ไม่ระบุ = ออกตั๋วในชื่อตัวเอง
       body.append(k, v);
     });
     files.value.forEach((f) => body.append('attachments', f));
@@ -80,9 +112,11 @@ async function submit() {
     const { data } = await api.post('/tickets', body, { headers: { 'Content-Type': 'multipart/form-data' } });
     store.upsert(data);
     ui.success(
-      data.assignee
-        ? `ออกตั๋ว ${data.code} และมอบหมายให้ ${data.assignee.name} แล้ว`
-        : `ส่งเรื่องเรียบร้อย — เลขตั๋วของคุณคือ ${data.code}`
+      data.requesterName && requesterInfo.value
+        ? `ออกตั๋ว ${data.code} ให้ ${data.requesterName} แล้ว`
+        : data.assignee
+          ? `ออกตั๋ว ${data.code} และมอบหมายให้ ${data.assignee.name} แล้ว`
+          : `ส่งเรื่องเรียบร้อย — เลขตั๋วของคุณคือ ${data.code}`
     );
     router.push({ name: 'ticket-detail', params: { id: data._id } });
   } catch (err) {
@@ -137,6 +171,28 @@ async function submit() {
       <div>
         <label class="field-label" for="nt-asset">อุปกรณ์ที่เกี่ยวข้อง (ถ้ามี)</label>
         <input id="nt-asset" v-model="form.asset" class="input" placeholder="เช่น PRN-3F-02, NB-HR-0142" />
+      </div>
+
+      <div v-if="canAssign">
+        <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง (ถ้าเว้นว่าง จะออกตั๋วในชื่อคุณเอง)</label>
+        <input
+          id="nt-requester"
+          v-model="form.requesterEmployeeId"
+          class="input"
+          placeholder="เช่น EMP101"
+          autocomplete="off"
+        />
+        <p v-if="lookingUp" class="requester-hint mb-0">กำลังค้นหา…</p>
+        <p v-else-if="requesterError" class="requester-hint requester-hint--err mb-0">{{ requesterError }}</p>
+        <div v-else-if="requesterInfo" class="requester-card">
+          <span class="avatar avatar--sm">{{ requesterInfo.name.charAt(0) }}</span>
+          <span class="d-flex flex-column min-w-0">
+            <span class="requester-card__name text-truncate">{{ requesterInfo.name }}</span>
+            <span class="requester-card__sub text-truncate">
+              {{ requesterInfo.department || 'ไม่ระบุแผนก' }} · {{ requesterInfo.email }}
+            </span>
+          </span>
+        </div>
       </div>
 
       <div v-if="canAssign">
@@ -233,6 +289,15 @@ async function submit() {
 /* ไม่มีแผงช่วยเหลือด้านข้าง (Helpdesk) ให้ฟอร์มกินเต็มความกว้าง */
 .new-layout:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
 .new-form { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+.requester-hint { margin-top: 6px; font: 400 11.5px var(--font-th); color: var(--muted-2); }
+.requester-hint--err { color: var(--danger-ink); }
+.requester-card {
+  margin-top: 8px; display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px; border-radius: var(--radius);
+  background: var(--brand-tint); border: 1px solid var(--brand);
+}
+.requester-card__name { font: 500 12.5px var(--font-th); }
+.requester-card__sub { font: 400 11px var(--font-th); color: var(--muted); }
 .new-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .new-form__foot {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;

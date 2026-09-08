@@ -20,6 +20,7 @@ router.get('/auth/me', requireAuth, auth.me);
 router.patch('/auth/password', requireAuth, auth.changePassword);
 
 /* ---------- ผู้ใช้งาน (Admin) ---------- */
+router.get('/users/lookup', requireAuth, requireRole('helpdesk'), users.lookup);
 router.get('/users/technicians', requireAuth, requireRole('admin', 'helpdesk', 'tech'), users.technicians);
 router.get('/users', requireAuth, requireRole('admin', 'helpdesk'), users.list);
 router.post('/users', requireAuth, requireRole('admin'), users.create);

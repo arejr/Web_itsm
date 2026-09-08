@@ -71,6 +71,34 @@ async function req(m, path, t, body) {
   check('พนักงานเลือกผู้รับผิดชอบเองไม่ได้ (ถูกเมิน)',
     empAssign.status === 201 && !empAssign.j.assignee, empAssign.j.assignee?.name || '');
 
+  // ออกตั๋วแทนผู้แจ้งด้วยรหัสพนักงาน — ใช้ตอนรับสายหรือ Walk-in
+  const lookup = await req('GET','/users/lookup?employeeId=emp101', helpdesk);
+  check('ค้นหาพนักงานจากรหัสได้ (ไม่แยกพิมพ์เล็กใหญ่)',
+    lookup.status === 200 && lookup.j.name === 'อัสนียา นาคสิงห์', lookup.j.message || lookup.j.name);
+  check('ค้นหารหัสที่ไม่มีอยู่ได้ 404',
+    (await req('GET','/users/lookup?employeeId=NOPE999', helpdesk)).status === 404);
+  check('เจ้าหน้าที่ IT ใช้การค้นหาพนักงานไม่ได้',
+    (await req('GET','/users/lookup?employeeId=EMP101', tech)).status === 403);
+
+  const behalf = await req('POST','/tickets', helpdesk, {
+    title:'ทดสอบ E2E — รับสายแล้วออกตั๋วแทน', description:'x',
+    requesterEmployeeId:'EMP101', channel:'โทรศัพท์'
+  });
+  check('Helpdesk ออกตั๋วแทนผู้แจ้งได้',
+    behalf.status === 201 && behalf.j.requesterName === 'อัสนียา นาคสิงห์', behalf.j.message||behalf.j.requesterName);
+  check('ตั๋วที่ออกแทนดึงข้อมูลผู้แจ้งมาครบ',
+    behalf.j.requesterEmail === 'asniya.n@company.co.th' && !!behalf.j.requesterDept, behalf.j.requesterEmail);
+  check('ไทม์ไลน์บันทึกว่าใครรับเรื่องแทน',
+    (behalf.j.timeline||[]).some(e => (e.title||'').includes('รับเรื่องแทนผู้แจ้ง')));
+  check('ผู้แจ้งตัวจริงเห็นตั๋วที่ออกแทนในรายการของตน',
+    ((await req('GET','/tickets', emp)).j.items || (await req('GET','/tickets', emp)).j)
+      .some(t => t.code === behalf.j.code));
+  check('ระบุรหัสผู้แจ้งที่ไม่มีอยู่ไม่ได้',
+    (await req('POST','/tickets', helpdesk, { title:'x', description:'x', requesterEmployeeId:'NOPE999' })).status === 400);
+  const empBehalf = await req('POST','/tickets', emp, { title:'x', description:'x', requesterEmployeeId:'EMP102' });
+  check('พนักงานแจ้งแทนคนอื่นไม่ได้ (ถูกเมิน)',
+    empBehalf.status === 201 && empBehalf.j.requesterName === 'อัสนียา นาคสิงห์', empBehalf.j.requesterName);
+
   // ช่องทางการรับเรื่อง — Helpdesk บันทึกได้ว่ารับเรื่องมาทางไหน
   const byPhone = await req('POST','/tickets', helpdesk, {
     title:'ทดสอบ E2E — รับเรื่องทางโทรศัพท์', description:'x', channel:'โทรศัพท์'

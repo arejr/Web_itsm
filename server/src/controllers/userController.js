@@ -1,6 +1,9 @@
 const User = require('../models/User');
 const Ticket = require('../models/Ticket');
 
+// รหัสพนักงานที่ผู้ใช้พิมพ์เข้ามาอาจมีอักขระพิเศษ ต้อง escape ก่อนทำเป็น RegExp
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // GET /api/users — รายชื่อสมาชิกทั้งหมด (Admin)
 exports.list = async (req, res, next) => {
   try {
@@ -19,6 +22,34 @@ exports.list = async (req, res, next) => {
     }
     const users = await User.find(filter).sort({ role: 1, name: 1 });
     res.json(users);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/users/lookup?employeeId=EMP101
+ * ค้นหาพนักงานจากรหัสประจำตัว — ใช้ตอน Helpdesk รับเรื่องทางโทรศัพท์
+ * แล้วต้องยืนยันว่าออกตั๋วให้ถูกคน คืนเฉพาะข้อมูลที่จำเป็นต่อการออกตั๋ว
+ */
+exports.lookup = async (req, res, next) => {
+  try {
+    const code = String(req.query.employeeId || '').trim();
+    if (!code) return res.status(400).json({ message: 'กรุณาระบุรหัสพนักงาน' });
+
+    const user = await User.findOne({ employeeId: new RegExp(`^${escapeRegExp(code)}$`, 'i') });
+    if (!user) return res.status(404).json({ message: `ไม่พบพนักงานรหัส ${code}` });
+    if (!user.active) return res.status(400).json({ message: `บัญชีของ ${user.name} ถูกระงับการใช้งาน` });
+
+    res.json({
+      _id: user._id,
+      employeeId: user.employeeId,
+      name: user.name,
+      department: user.department,
+      company: user.company,
+      email: user.email,
+      phone: user.phone
+    });
   } catch (err) {
     next(err);
   }

@@ -10,6 +10,9 @@ const { serializeTicket } = require('../utils/serialize');
 const { notify } = require('../utils/notify');
 const { PRIORITY_SLA_MINUTES, PRIORITY_LABEL, STATUSES, CHANNELS } = require('../config/constants');
 
+// รหัสพนักงานที่พิมพ์เข้ามาอาจมีอักขระพิเศษ ต้อง escape ก่อนทำเป็น RegExp
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const POPULATE = [
   { path: 'category', select: 'key label color' },
   { path: 'assignee', select: 'name email role group skill' },
@@ -132,7 +135,10 @@ exports.get = async (req, res, next) => {
 // POST /api/tickets — พนักงานแจ้งปัญหา หรือ Helpdesk ออกตั๋วแทน
 exports.create = async (req, res, next) => {
   try {
-    const { title, description, categoryId, priority, location, asset, service, isDraft, assigneeId, channel } = req.body;
+    const {
+      title, description, categoryId, priority, location, asset, service,
+      isDraft, assigneeId, channel, requesterEmployeeId
+    } = req.body;
 
     if (!title || !String(title).trim()) {
       return res.status(400).json({ message: 'กรุณาระบุชื่อปัญหา' });
@@ -156,9 +162,18 @@ exports.create = async (req, res, next) => {
       if (!assignedUser) return res.status(400).json({ message: 'ไม่พบเจ้าหน้าที่ที่ต้องการมอบหมาย' });
     }
 
-    // แจ้งปัญหาได้เฉพาะพนักงานบริษัทและ IT Helpdesk ที่ออกตั๋วให้ตัวเอง
-    // ทั้งสองกรณีผู้แจ้งคือคนที่ล็อกอินอยู่เสมอ ไม่มีการออกตั๋วแทนคนอื่น
-    const requester = req.user;
+    // ปกติผู้แจ้งคือคนที่ล็อกอินอยู่ แต่ Helpdesk ที่รับเรื่องทางโทรศัพท์หรือ Walk-in
+    // ระบุรหัสพนักงานผู้แจ้งได้ ตั๋วจะได้อยู่ในชื่อเจ้าของเรื่องจริง ไม่ใช่ชื่อคนรับเรื่อง
+    let requester = req.user;
+    let onBehalf = false;
+    const behalfCode = String(requesterEmployeeId || '').trim();
+    if (behalfCode && req.user.role === 'helpdesk') {
+      const found = await User.findOne({ employeeId: new RegExp(`^${escapeRegExp(behalfCode)}$`, 'i') });
+      if (!found) return res.status(400).json({ message: `ไม่พบพนักงานรหัส ${behalfCode}` });
+      if (!found.active) return res.status(400).json({ message: `บัญชีของ ${found.name} ถูกระงับการใช้งาน` });
+      requester = found;
+      onBehalf = String(found._id) !== String(req.user._id);
+    }
     const prio = priority || 'medium';
     const ticket = new Ticket({
       code: await nextTicketCode(),
@@ -196,6 +211,8 @@ exports.create = async (req, res, next) => {
     }
 
     pushTimeline(ticket, 'ผู้ใช้แจ้งปัญหาเข้าระบบ', { name: ticket.requesterName }, 'info');
+    // บันทึกไว้ว่าใครเป็นคนรับเรื่องแทน จะได้ตามย้อนได้ว่าตั๋วนี้มาจากการรับสายหรือ Walk-in
+    if (onBehalf) pushTimeline(ticket, `${req.user.name} รับเรื่องแทนผู้แจ้งทาง${intake}`, req.user, 'info');
     if (assignedUser) applyAssignee(ticket, assignedUser, req.user);
 
     await ticket.save();
