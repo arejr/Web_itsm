@@ -151,7 +151,7 @@ async function submit() {
 <template>
   <div class="new-layout">
     <form class="card-surface new-form" @submit.prevent="submit">
-      <div v-if="canAssign">
+      <div v-if="canAssign" class="requester-field">
         <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง</label>
         <input
           id="nt-requester"
@@ -327,6 +327,8 @@ async function submit() {
 /* ไม่มีแผงช่วยเหลือด้านข้าง (Helpdesk) ให้ฟอร์มกินเต็มความกว้าง */
 .new-layout:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
 .new-form { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+/* รหัสพนักงานเป็นข้อความสั้น ๆ ไม่ต้องใช้ช่องเต็มความกว้างเหมือนช่องอื่น */
+.requester-field { max-width: 420px; }
 .requester-hint { margin-top: 6px; font: 400 11.5px var(--font-th); color: var(--muted-2); }
 .requester-hint--err { color: var(--danger-ink); }
 .requester-card {
