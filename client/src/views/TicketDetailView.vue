@@ -718,11 +718,14 @@ function goBack() {
   text-align: center;
 }
 
-.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+/* ปุ่มสถานะกินเต็มความกว้างและสูงเท่าปุ่มบันทึกและปิดตั๋วงาน
+   เพราะเป็นปุ่มหลักของขั้นตอนนั้นเหมือนกัน ต่างแค่สี */
+.status-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .status-btn {
-  padding: 9px 6px; border-radius: 7px;
+  /* ปุ่มนี้มีเส้นขอบ 1px ทั้งบนล่าง จึงลดระยะห่างลง 1px ให้สูงเท่าปุ่มที่ไม่มีขอบ */
+  padding: 10px; border-radius: var(--radius);
   border: 1px solid var(--line-strong); background: #fff; color: var(--ink-3);
-  cursor: pointer; font: 500 11.5px var(--font-th);
+  cursor: pointer; font: 600 12.5px var(--font-th);
 }
 .status-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
