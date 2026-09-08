@@ -135,8 +135,16 @@ const isClosed = computed(() => ['resolved', 'cancelled'].includes(t.value?.stat
  *   เจ้าหน้าที่ฝ่าย IT — รับงาน (กำลังดำเนินการ) แล้วบันทึกวิธีแก้เพื่อปิดงาน
  *   IT Helpdesk       — ปิดงานที่แก้เบื้องต้นได้ · มอบหมายงานให้เจ้าหน้าที่ · ยกเลิก
  */
-// ตั๋วที่ปิดหรือยกเลิกแล้วไม่ต้องมีปุ่มเปลี่ยนสถานะ เหลือแค่แสดงวิธีแก้ที่บันทึกไว้
-const showStatusButtons = computed(() => auth.isTech && !isClosed.value);
+/**
+ * เจ้าหน้าที่ IT เห็นปุ่มเดียวตามขั้นที่ตั๋วอยู่ จะได้ไม่ต้องเลือกว่าจะกดอะไร
+ *   มอบหมายแล้ว      — กดรับงาน (กำลังดำเนินการ)
+ *   กำลังดำเนินการ    — บันทึกวิธีแก้แล้วปิดงาน
+ * ส่วน Helpdesk ปิดงานได้ทุกขั้นเพราะแก้ปัญหาเบื้องต้นเองได้
+ */
+const showStatusButtons = computed(() => auth.isTech && t.value?.status === 'assigned');
+const showResolveButton = computed(
+  () => auth.isHelpdesk || (auth.isTech && t.value?.status === 'inprogress')
+);
 const showTransferButton = computed(() => auth.isHelpdesk);
 // กำหนดระดับความสำคัญเป็นหน้าที่ของ Helpdesk และทำได้เฉพาะตั๋วที่ยังไม่ปิด
 const canTriage = computed(() => auth.isHelpdesk && !isClosed.value);
@@ -492,12 +500,12 @@ function goBack() {
               <button class="btn-brand w-100" type="button" :disabled="busy" @click="doTransfer">ยืนยันการมอบหมาย</button>
             </div>
 
-            <button class="btn-green w-100" type="button" :disabled="busy" @click="toggleResolve">
+            <button v-if="showResolveButton" class="btn-green w-100" type="button" :disabled="busy" @click="toggleResolve">
               บันทึกและปิดตั๋วงาน
             </button>
 
             <!-- ช่องบันทึกวิธีแก้จะเปิดออกมาหลังกดปิดตั๋วงาน ไม่ได้แสดงค้างไว้ตลอด -->
-            <div v-if="showResolve" class="resolve-box">
+            <div v-if="showResolve && showResolveButton" class="resolve-box">
               <textarea
                 ref="noteBox"
                 v-model="note"
