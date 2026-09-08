@@ -18,7 +18,8 @@ const scope = ref(auth.isTech ? 'mine' : 'all');
 const dragging = ref(null);
 
 const COLUMNS = [
-  { key: 'assigned', label: 'รอรับงาน', color: '#d97706', accepts: ['new', 'assigned'] },
+  { key: 'new', label: 'รอคัดกรอง', color: '#d97706', accepts: ['new'] },
+  { key: 'assigned', label: 'มอบหมายแล้ว', color: '#3d84b8', accepts: ['assigned'] },
   { key: 'inprogress', label: 'กำลังดำเนินการ', color: '#14776b', accepts: ['inprogress'] },
   { key: 'resolved', label: 'แก้ไขสำเร็จ', color: '#5a9c33', accepts: ['resolved'] }
 ];
@@ -53,6 +54,12 @@ async function onDrop(col) {
   const t = dragging.value;
   dragging.value = null;
   if (!t || col.key === t.status) return;
+  if (col.key === 'new') {
+    // ตั๋วที่มอบหมายไปแล้วยังถือผู้รับผิดชอบอยู่ ถ้าดันสถานะกลับมาเฉย ๆ
+    // จะได้ตั๋วที่บอกว่ารอคัดกรองแต่มีคนถืออยู่ ซึ่งขัดกัน
+    ui.error('ย้ายกลับไปรอคัดกรองไม่ได้ — ถ้าต้องการเปลี่ยนผู้รับผิดชอบให้เปิดตั๋วแล้วมอบหมายใหม่');
+    return;
+  }
   if (col.key === 'resolved') {
     ui.error('การปิดตั๋วต้องบันทึกวิธีแก้ปัญหา — เปิดตั๋วเพื่อบันทึก Resolution Note');
     open(t);
