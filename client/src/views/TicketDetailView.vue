@@ -135,7 +135,8 @@ const isClosed = computed(() => ['resolved', 'cancelled'].includes(t.value?.stat
  *   เจ้าหน้าที่ฝ่าย IT — รับงาน (กำลังดำเนินการ) แล้วบันทึกวิธีแก้เพื่อปิดงาน
  *   IT Helpdesk       — ปิดงานที่แก้เบื้องต้นได้ · มอบหมายงานให้เจ้าหน้าที่ · ยกเลิก
  */
-const showStatusButtons = computed(() => auth.isTech);
+// ตั๋วที่ปิดหรือยกเลิกแล้วไม่ต้องมีปุ่มเปลี่ยนสถานะ เหลือแค่แสดงวิธีแก้ที่บันทึกไว้
+const showStatusButtons = computed(() => auth.isTech && !isClosed.value);
 const showTransferButton = computed(() => auth.isHelpdesk);
 // กำหนดระดับความสำคัญเป็นหน้าที่ของ Helpdesk และทำได้เฉพาะตั๋วที่ยังไม่ปิด
 const canTriage = computed(() => auth.isHelpdesk && !isClosed.value);
