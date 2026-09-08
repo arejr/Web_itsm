@@ -83,17 +83,14 @@ async function onDrop(col) {
 
 <template>
   <div class="d-flex flex-column gap-3">
-    <div v-if="!auth.isEmployee" class="d-flex gap-2 flex-wrap align-items-center">
-      <!-- เจ้าหน้าที่ IT ดูเฉพาะงานที่ตนรับผิดชอบ จึงไม่มีปุ่มสลับไปดูงานทั้งทีม -->
-      <template v-if="!auth.isTech">
-        <button class="chip chip--lg" :class="{ 'is-active': scope === 'mine' }" type="button" @click="setScope('mine')">
-          งานของฉัน
-        </button>
-        <button class="chip chip--lg" :class="{ 'is-active': scope === 'all' }" type="button" @click="setScope('all')">
-          งานทั้งทีม
-        </button>
-      </template>
-      <span class="text-muted-3" style="font-size: 11.5px">ลากการ์ดข้ามคอลัมน์เพื่อเปลี่ยนสถานะการทำงาน</span>
+    <!-- เจ้าหน้าที่ IT ดูเฉพาะงานที่ตนรับผิดชอบ จึงไม่มีแถบเครื่องมือนี้ -->
+    <div v-if="auth.isHelpdesk || auth.isAdmin" class="d-flex gap-2 flex-wrap align-items-center">
+      <button class="chip chip--lg" :class="{ 'is-active': scope === 'mine' }" type="button" @click="setScope('mine')">
+        งานของฉัน
+      </button>
+      <button class="chip chip--lg" :class="{ 'is-active': scope === 'all' }" type="button" @click="setScope('all')">
+        งานทั้งทีม
+      </button>
     </div>
 
     <div class="board" :style="{ '--board-cols': columns.length }">
