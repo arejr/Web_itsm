@@ -191,7 +191,7 @@ async function submit() {
 
       <div>
         <label class="field-label" for="nt-asset">อุปกรณ์ที่เกี่ยวข้อง (ถ้ามี)</label>
-        <input id="nt-asset" v-model="form.asset" class="input" placeholder="เช่น PRN-3F-02, NB-HR-0142" />
+        <input id="nt-asset" v-model="form.asset" class="input" />
       </div>
 
       <div v-if="canAssign">
