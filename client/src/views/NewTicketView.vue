@@ -300,9 +300,6 @@ async function submit() {
       </div>
 
       <div class="new-form__foot">
-        <span class="flex-fill" style="font: 400 11.5px var(--font-th); color: var(--muted-2)">
-          ระบบจะออกเลขตั๋วอัตโนมัติและแจ้งเตือนคุณทุกครั้งที่สถานะเปลี่ยน
-        </span>
         <button class="btn-brand px-4 py-3" type="submit" :disabled="busy || !canSubmit">
           {{ busy ? 'กำลังส่ง…' : 'ส่งเรื่องแจ้งปัญหา' }}
         </button>
@@ -340,7 +337,8 @@ async function submit() {
 input[readonly].input { background: var(--surface-2); color: var(--ink-2); cursor: default; }
 .new-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .new-form__foot {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  /* เหลือแค่ปุ่มส่งเรื่อง จึงต้องดันไปชิดขวาเอง เดิมมีข้อความ flex-fill ดันให้ */
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
   padding-top: 12px; border-top: 1px solid rgba(16, 24, 32, 0.08);
 }
 
