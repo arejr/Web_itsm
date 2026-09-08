@@ -53,6 +53,24 @@ async function req(m, path, t, body) {
   check('ผู้ออกตั๋วไม่ได้รับแจ้งเตือนตั๋วใหม่ของตัวเอง',
     !((await req('GET','/notifications', helpdesk)).j.items || [])
       .some(n => n.ticketCode === deskTicket.j.code));
+  // มอบหมายได้ตั้งแต่ตอนออกตั๋ว ไม่ต้องผ่านคิวคัดกรองอีกรอบ
+  const techList = (await req('GET','/users/technicians', helpdesk)).j;
+  const owner = techList.find(x => x.name.startsWith('ธนวัฒน์'));
+  const preAssigned = await req('POST','/tickets', helpdesk, {
+    title:'ทดสอบ E2E — ออกตั๋วพร้อมมอบหมาย', description:'x', assigneeId: owner._id
+  });
+  check('Helpdesk มอบหมายงานได้ตั้งแต่ตอนออกตั๋ว',
+    preAssigned.status === 201 && preAssigned.j.assignee?._id === owner._id, preAssigned.j.message||'');
+  check('ตั๋วที่มอบหมายมาแล้วข้ามสถานะรอคัดกรอง',
+    preAssigned.j.status === 'assigned', preAssigned.j.status);
+  check('ไทม์ไลน์บันทึกการมอบหมายตั้งแต่ออกตั๋ว',
+    (preAssigned.j.timeline||[]).some(e => e.kind === 'assign'));
+  check('มอบหมายให้คนที่ไม่มีอยู่จริงไม่ได้',
+    (await req('POST','/tickets', helpdesk, { title:'x', description:'x', assigneeId:'6a9353f5ec70c3fe43aff999' })).status === 400);
+  const empAssign = await req('POST','/tickets', emp, { title:'x', description:'x', assigneeId: owner._id });
+  check('พนักงานเลือกผู้รับผิดชอบเองไม่ได้ (ถูกเมิน)',
+    empAssign.status === 201 && !empAssign.j.assignee, empAssign.j.assignee?.name || '');
+
   check('เจ้าหน้าที่ IT ออกตั๋วเองไม่ได้',
     (await req('POST','/tickets', tech, { title:'x', description:'x' })).status === 403);
   check('ผู้ดูแลระบบออกตั๋วเองไม่ได้',

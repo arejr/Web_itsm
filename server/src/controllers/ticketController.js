@@ -44,6 +44,33 @@ function watchers(ticket, exceptUserId) {
     .filter((id) => id && String(id) !== String(exceptUserId));
 }
 
+/**
+ * มอบหมายตั๋วให้เจ้าหน้าที่ — ใช้ร่วมกันทั้งตอนออกตั๋วและตอนคัดกรอง
+ * รวมไว้ที่เดียวเพื่อไม่ให้สองเส้นทางตั้งสถานะหรือกลุ่มงานไม่ตรงกัน
+ */
+function applyAssignee(ticket, assignedUser, actor) {
+  const current = ticket.assignee?._id || ticket.assignee || '';
+  const changed = String(current) !== String(assignedUser._id);
+  ticket.assignee = assignedUser._id;
+  ticket.group = assignedUser.group || '';
+  if (ticket.status === 'new') {
+    ticket.status = 'assigned';
+    ticket.statusReason = 'รอเจ้าหน้าที่รับงาน';
+  }
+  if (changed) pushTimeline(ticket, `มอบหมายให้ ${assignedUser.name}`, actor, 'assign');
+}
+
+function notifyAssigned(io, ticket, assignedUser) {
+  return notify(io, {
+    userIds: [assignedUser._id],
+    tag: 'มอบหมาย',
+    title: 'คุณได้รับมอบหมายตั๋วงานใหม่',
+    body: `${ticket.code} · ${ticket.title}`,
+    ticket: ticket._id,
+    ticketCode: ticket.code
+  });
+}
+
 // GET /api/tickets
 exports.list = async (req, res, next) => {
   try {
@@ -105,13 +132,20 @@ exports.get = async (req, res, next) => {
 // POST /api/tickets — พนักงานแจ้งปัญหา หรือ Helpdesk ออกตั๋วแทน
 exports.create = async (req, res, next) => {
   try {
-    const { title, description, categoryId, priority, location, asset, service, isDraft } = req.body;
+    const { title, description, categoryId, priority, location, asset, service, isDraft, assigneeId } = req.body;
 
     if (!title || !String(title).trim()) {
       return res.status(400).json({ message: 'กรุณาระบุชื่อปัญหา' });
     }
 
     const category = categoryId ? await Category.findById(categoryId) : await Category.findOne({ key: 'other' });
+
+    // Helpdesk มอบหมายงานได้ตั้งแต่ตอนออกตั๋ว ส่วนพนักงานทั่วไปเลือกผู้รับผิดชอบเองไม่ได้
+    let assignedUser = null;
+    if (assigneeId && req.user.role === 'helpdesk') {
+      assignedUser = await User.findOne({ _id: assigneeId, role: { $in: ['tech', 'helpdesk'] }, active: true });
+      if (!assignedUser) return res.status(400).json({ message: 'ไม่พบเจ้าหน้าที่ที่ต้องการมอบหมาย' });
+    }
 
     // แจ้งปัญหาได้เฉพาะพนักงานบริษัทและ IT Helpdesk ที่ออกตั๋วให้ตัวเอง
     // ทั้งสองกรณีผู้แจ้งคือคนที่ล็อกอินอยู่เสมอ ไม่มีการออกตั๋วแทนคนอื่น
@@ -153,6 +187,7 @@ exports.create = async (req, res, next) => {
     }
 
     pushTimeline(ticket, 'ผู้ใช้แจ้งปัญหาเข้าระบบ', { name: ticket.requesterName }, 'info');
+    if (assignedUser) applyAssignee(ticket, assignedUser, req.user);
 
     await ticket.save();
     await ticket.populate(POPULATE);
@@ -160,22 +195,27 @@ exports.create = async (req, res, next) => {
     const io = req.app.get('io');
     io?.emit('ticket:created', serializeTicket(ticket));
 
-    // ตั๋วที่แจ้งเข้ามาใหม่เป็นหน้าที่ของ Helpdesk ในการคัดกรองและมอบหมาย
-    // บทบาทอื่นจะได้รับแจ้งเตือนเฉพาะตั๋วที่ตนเกี่ยวข้องด้วย
-    // ถ้า Helpdesk เป็นคนออกตั๋วเอง ไม่ต้องเด้งแจ้งเตือนกลับไปหาตัวเอง
-    const desk = await User.find({
-      role: 'helpdesk',
-      active: true,
-      _id: { $ne: requester._id }
-    }).select('_id');
-    await notify(io, {
-      userIds: desk.map((u) => u._id),
-      tag: 'ตั๋วใหม่',
-      title: 'มีตั๋วแจ้งปัญหาเข้าใหม่รอคัดกรอง',
-      body: `${ticket.code} · ${ticket.title}`,
-      ticket: ticket._id,
-      ticketCode: ticket.code
-    });
+    if (assignedUser) {
+      // มอบหมายมาตั้งแต่ออกตั๋วแล้ว จึงไม่ต้องเรียก Helpdesk คนอื่นมาคัดกรองซ้ำ
+      await notifyAssigned(io, ticket, assignedUser);
+    } else {
+      // ตั๋วที่แจ้งเข้ามาใหม่เป็นหน้าที่ของ Helpdesk ในการคัดกรองและมอบหมาย
+      // บทบาทอื่นจะได้รับแจ้งเตือนเฉพาะตั๋วที่ตนเกี่ยวข้องด้วย
+      // ถ้า Helpdesk เป็นคนออกตั๋วเอง ไม่ต้องเด้งแจ้งเตือนกลับไปหาตัวเอง
+      const desk = await User.find({
+        role: 'helpdesk',
+        active: true,
+        _id: { $ne: requester._id }
+      }).select('_id');
+      await notify(io, {
+        userIds: desk.map((u) => u._id),
+        tag: 'ตั๋วใหม่',
+        title: 'มีตั๋วแจ้งปัญหาเข้าใหม่รอคัดกรอง',
+        body: `${ticket.code} · ${ticket.title}`,
+        ticket: ticket._id,
+        ticketCode: ticket.code
+      });
+    }
 
     res.status(201).json(serializeTicket(ticket));
   } catch (err) {
@@ -208,14 +248,7 @@ exports.triage = async (req, res, next) => {
       assignedUser = await User.findById(assigneeId);
       if (!assignedUser) return res.status(400).json({ message: 'ไม่พบเจ้าหน้าที่ที่ต้องการมอบหมาย' });
 
-      const changed = String(ticket.assignee?._id || '') !== String(assignedUser._id);
-      ticket.assignee = assignedUser._id;
-      ticket.group = assignedUser.group || '';
-      if (['new'].includes(ticket.status)) {
-        ticket.status = 'assigned';
-        ticket.statusReason = 'รอเจ้าหน้าที่รับงาน';
-      }
-      if (changed) pushTimeline(ticket, `มอบหมายให้ ${assignedUser.name}`, req.user, 'assign');
+      applyAssignee(ticket, assignedUser, req.user);
     }
 
     if (note) ticket.description = `${ticket.description}\n\n[หมายเหตุจาก Helpdesk] ${note}`.trim();
@@ -228,16 +261,7 @@ exports.triage = async (req, res, next) => {
     io?.emit('ticket:updated', payload);
     io?.to(`ticket:${ticket._id}`).emit('ticket:updated', payload);
 
-    if (assignedUser) {
-      await notify(io, {
-        userIds: [assignedUser._id],
-        tag: 'มอบหมาย',
-        title: 'คุณได้รับมอบหมายตั๋วงานใหม่',
-        body: `${ticket.code} · ${ticket.title}`,
-        ticket: ticket._id,
-        ticketCode: ticket.code
-      });
-    }
+    if (assignedUser) await notifyAssigned(io, ticket, assignedUser);
 
     res.json(payload);
   } catch (err) {

@@ -2,17 +2,22 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api, { errMsg } from '@/services/api';
+import { useAuthStore } from '@/stores/auth';
 import { useMetaStore } from '@/stores/meta';
 import { useTicketStore } from '@/stores/tickets';
 import { useUiStore } from '@/stores/ui';
 import { fileSize } from '@/services/format';
 
 const router = useRouter();
+const auth = useAuthStore();
 const meta = useMetaStore();
 const store = useTicketStore();
 const ui = useUiStore();
 
-const form = ref({ title: '', description: '', categoryId: '', location: '', asset: '' });
+const form = ref({ title: '', description: '', categoryId: '', location: '', asset: '', assigneeId: '' });
+
+// Helpdesk ที่ออกตั๋วเองมอบหมายผู้รับผิดชอบได้เลย ไม่ต้องรอคัดกรองอีกรอบ
+const canAssign = computed(() => auth.isHelpdesk);
 const files = ref([]);
 const previews = ref([]);
 const busy = ref(false);
@@ -22,6 +27,7 @@ const dragOver = ref(false);
 onMounted(async () => {
   await meta.load();
   form.value.categoryId = meta.categories[0]?._id || '';
+  if (canAssign.value) await meta.loadTechnicians();
 });
 
 const selfHelp = [
@@ -56,12 +62,19 @@ async function submit() {
   busy.value = true;
   try {
     const body = new FormData();
-    Object.entries(form.value).forEach(([k, v]) => body.append(k, v));
+    Object.entries(form.value).forEach(([k, v]) => {
+      if (k === 'assigneeId' && !v) return; // ไม่เลือกผู้รับผิดชอบ = ส่งเข้าคิวคัดกรองตามปกติ
+      body.append(k, v);
+    });
     files.value.forEach((f) => body.append('attachments', f));
 
     const { data } = await api.post('/tickets', body, { headers: { 'Content-Type': 'multipart/form-data' } });
     store.upsert(data);
-    ui.success(`ส่งเรื่องเรียบร้อย — เลขตั๋วของคุณคือ ${data.code}`);
+    ui.success(
+      data.assignee
+        ? `ออกตั๋ว ${data.code} และมอบหมายให้ ${data.assignee.name} แล้ว`
+        : `ส่งเรื่องเรียบร้อย — เลขตั๋วของคุณคือ ${data.code}`
+    );
     router.push({ name: 'ticket-detail', params: { id: data._id } });
   } catch (err) {
     ui.error(errMsg(err));
@@ -115,6 +128,16 @@ async function submit() {
       <div>
         <label class="field-label" for="nt-asset">อุปกรณ์ที่เกี่ยวข้อง (ถ้ามี)</label>
         <input id="nt-asset" v-model="form.asset" class="input" placeholder="เช่น PRN-3F-02, NB-HR-0142" />
+      </div>
+
+      <div v-if="canAssign">
+        <label class="field-label" for="nt-assignee">มอบหมายเจ้าหน้าที่ (ถ้ายังไม่เลือก จะเข้าคิวคัดกรอง)</label>
+        <select id="nt-assignee" v-model="form.assigneeId" class="input">
+          <option value="">— ยังไม่มอบหมาย —</option>
+          <option v-for="tech in meta.technicians" :key="tech._id" :value="tech._id">
+            {{ tech.name }} · {{ tech.skill }} ({{ tech.load }} งาน)
+          </option>
+        </select>
       </div>
 
       <div>
