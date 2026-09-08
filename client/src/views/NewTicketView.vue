@@ -75,7 +75,25 @@ const selfHelp = [
   { title: 'ต่อ Wi-Fi องค์กรไม่ได้', sub: 'ลืมเครือข่ายเดิมแล้วเชื่อมต่อใหม่ด้วยบัญชีบริษัท' }
 ];
 
-const canSubmit = computed(() => form.value.title.trim() && form.value.description.trim());
+/**
+ * Helpdesk ต้องกรอกให้ครบทุกช่องก่อนส่ง ยกเว้นรหัสพนักงานผู้แจ้ง
+ * อุปกรณ์ที่เกี่ยวข้อง และไฟล์แนบ ซึ่งเป็นข้อมูลเสริม
+ * ส่วนพนักงานทั่วไปกรอกแค่ชื่อปัญหากับรายละเอียดเหมือนเดิม
+ */
+const missingFields = computed(() => {
+  const f = form.value;
+  const missing = [];
+  if (!f.title.trim()) missing.push('ชื่อปัญหา');
+  if (!f.description.trim()) missing.push('รายละเอียดปัญหา');
+  if (!canAssign.value) return missing;
+
+  if (!f.categoryId) missing.push('หมวดหมู่');
+  if (!f.location.trim()) missing.push('สถานที่เกิดเหตุ');
+  if (!f.channel) missing.push('ช่องทางการรับเรื่อง');
+  if (!f.assigneeId) missing.push('มอบหมายเจ้าหน้าที่');
+  return missing;
+});
+const canSubmit = computed(() => missingFields.value.length === 0);
 
 function addFiles(list) {
   const incoming = Array.from(list || []).filter((f) => f.size <= 10 * 1024 * 1024);
@@ -95,7 +113,7 @@ function removeFile(i) {
 
 async function submit() {
   if (!canSubmit.value) {
-    ui.error('กรุณากรอกชื่อปัญหาและรายละเอียดให้ครบถ้วน');
+    ui.error(`กรุณากรอกให้ครบก่อนส่ง — ยังขาด ${missingFields.value.join(', ')}`);
     return;
   }
   busy.value = true;
@@ -169,7 +187,7 @@ async function submit() {
 
       <div class="new-form__row">
         <div>
-          <span class="field-label">หมวดหมู่</span>
+          <span class="field-label">หมวดหมู่<template v-if="canAssign"> *</template></span>
           <div class="d-flex flex-wrap gap-1">
             <button
               v-for="c in meta.categories"
@@ -184,7 +202,7 @@ async function submit() {
           </div>
         </div>
         <div>
-          <label class="field-label" for="nt-loc">สถานที่เกิดเหตุ</label>
+          <label class="field-label" for="nt-loc">สถานที่เกิดเหตุ<template v-if="canAssign"> *</template></label>
           <input id="nt-loc" v-model="form.location" class="input" placeholder="อาคาร / ชั้น / ห้อง" />
         </div>
       </div>
@@ -195,7 +213,7 @@ async function submit() {
       </div>
 
       <div v-if="canAssign">
-        <span class="field-label">ช่องทางการรับเรื่อง</span>
+        <span class="field-label">ช่องทางการรับเรื่อง *</span>
         <div class="d-flex flex-wrap gap-1">
           <button
             v-for="ch in CHANNELS"
@@ -211,9 +229,9 @@ async function submit() {
       </div>
 
       <div v-if="canAssign">
-        <label class="field-label" for="nt-assignee">มอบหมายเจ้าหน้าที่ (ถ้ายังไม่เลือก จะเข้าคิวคัดกรอง)</label>
+        <label class="field-label" for="nt-assignee">มอบหมายเจ้าหน้าที่ *</label>
         <select id="nt-assignee" v-model="form.assigneeId" class="input">
-          <option value="">— ยังไม่มอบหมาย —</option>
+          <option value="">— เลือกเจ้าหน้าที่ผู้รับผิดชอบ —</option>
           <option v-for="tech in meta.technicians" :key="tech._id" :value="tech._id">
             {{ tech.name }} · {{ tech.skill }} ({{ tech.load }} งาน)
           </option>
