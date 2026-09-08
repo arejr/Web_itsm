@@ -30,6 +30,31 @@ userSchema.virtual('initial').get(function () {
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 
+/**
+ * รหัสพนักงานที่ปล่อยว่างต้องเก็บเป็น "ไม่มีค่า" ไม่ใช่สตริงว่าง
+ * เพราะดัชนี unique แบบ sparse มองข้ามเฉพาะค่าที่ไม่มีอยู่จริง
+ * ถ้าเก็บเป็น "" ระบบจะมีผู้ใช้ที่ไม่มีรหัสได้แค่คนเดียวทั้งระบบ
+ */
+function blankToUndefined(v) {
+  const s = typeof v === 'string' ? v.trim() : v;
+  return s === '' || s === null ? undefined : s;
+}
+
+userSchema.pre('validate', function (next) {
+  this.employeeId = blankToUndefined(this.employeeId);
+  next();
+});
+
+userSchema.pre('findOneAndUpdate', function (next) {
+  const u = this.getUpdate() || {};
+  if (u.employeeId !== undefined && blankToUndefined(u.employeeId) === undefined) {
+    delete u.employeeId;
+    u.$unset = { ...(u.$unset || {}), employeeId: '' };
+    this.setUpdate(u);
+  }
+  next();
+});
+
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);

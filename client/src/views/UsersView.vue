@@ -160,7 +160,7 @@ async function remove(u) {
       </div>
 
       <div class="users-head d-none d-lg-grid">
-        <span>ชื่อ–สกุล</span><span>บทบาท</span><span>แผนก / กลุ่มงาน</span><span>สถานะ</span><span class="text-end">การจัดการ</span>
+        <span>รหัสพนักงาน / ชื่อ–สกุล</span><span>บทบาท</span><span>แผนก / กลุ่มงาน</span><span>สถานะ</span><span class="text-end">การจัดการ</span>
       </div>
 
       <LoadingRows v-if="loading" :rows="5" />
@@ -171,7 +171,9 @@ async function remove(u) {
           <div class="avatar avatar--sm">{{ u.name.charAt(0) }}</div>
           <div class="d-flex flex-column min-w-0">
             <span class="users-row__name text-truncate">{{ u.name }}</span>
-            <span class="mono users-row__email text-truncate">{{ u.email }}</span>
+            <span class="mono users-row__email text-truncate">
+              <template v-if="u.employeeId">{{ u.employeeId }} · </template>{{ u.email }}
+            </span>
           </div>
         </div>
 
