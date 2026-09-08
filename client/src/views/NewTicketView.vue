@@ -130,6 +130,28 @@ async function submit() {
 <template>
   <div class="new-layout">
     <form class="card-surface new-form" @submit.prevent="submit">
+      <div v-if="canAssign">
+        <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง (ถ้าเว้นว่าง จะออกตั๋วในชื่อคุณเอง)</label>
+        <input
+          id="nt-requester"
+          v-model="form.requesterEmployeeId"
+          class="input"
+          placeholder="เช่น EMP101"
+          autocomplete="off"
+        />
+        <p v-if="lookingUp" class="requester-hint mb-0">กำลังค้นหา…</p>
+        <p v-else-if="requesterError" class="requester-hint requester-hint--err mb-0">{{ requesterError }}</p>
+        <div v-else-if="requesterInfo" class="requester-card">
+          <span class="avatar avatar--sm">{{ requesterInfo.name.charAt(0) }}</span>
+          <span class="d-flex flex-column min-w-0">
+            <span class="requester-card__name text-truncate">{{ requesterInfo.name }}</span>
+            <span class="requester-card__sub text-truncate">
+              {{ requesterInfo.department || 'ไม่ระบุแผนก' }} · {{ requesterInfo.email }}
+            </span>
+          </span>
+        </div>
+      </div>
+
       <div>
         <label class="field-label" for="nt-title">ชื่อปัญหา *</label>
         <input id="nt-title" v-model="form.title" class="input" placeholder="เช่น เครื่องพิมพ์ชั้น 3 พิมพ์งานไม่ออก" />
@@ -171,28 +193,6 @@ async function submit() {
       <div>
         <label class="field-label" for="nt-asset">อุปกรณ์ที่เกี่ยวข้อง (ถ้ามี)</label>
         <input id="nt-asset" v-model="form.asset" class="input" placeholder="เช่น PRN-3F-02, NB-HR-0142" />
-      </div>
-
-      <div v-if="canAssign">
-        <label class="field-label" for="nt-requester">รหัสพนักงานผู้แจ้ง (ถ้าเว้นว่าง จะออกตั๋วในชื่อคุณเอง)</label>
-        <input
-          id="nt-requester"
-          v-model="form.requesterEmployeeId"
-          class="input"
-          placeholder="เช่น EMP101"
-          autocomplete="off"
-        />
-        <p v-if="lookingUp" class="requester-hint mb-0">กำลังค้นหา…</p>
-        <p v-else-if="requesterError" class="requester-hint requester-hint--err mb-0">{{ requesterError }}</p>
-        <div v-else-if="requesterInfo" class="requester-card">
-          <span class="avatar avatar--sm">{{ requesterInfo.name.charAt(0) }}</span>
-          <span class="d-flex flex-column min-w-0">
-            <span class="requester-card__name text-truncate">{{ requesterInfo.name }}</span>
-            <span class="requester-card__sub text-truncate">
-              {{ requesterInfo.department || 'ไม่ระบุแผนก' }} · {{ requesterInfo.email }}
-            </span>
-          </span>
-        </div>
       </div>
 
       <div v-if="canAssign">
