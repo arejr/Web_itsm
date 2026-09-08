@@ -552,9 +552,6 @@ function goBack() {
           </template>
 
           <template v-else>
-            <div class="employee-hint">
-              ทีม IT กำลังดำเนินการอยู่ คุณจะได้รับแจ้งเตือนทันทีเมื่อสถานะเปลี่ยน หากมีข้อมูลเพิ่มเติมส่งผ่านแชทได้เลย
-            </div>
             <div v-if="t.resolutionNote" class="resolution-box">
               <span class="meta-label">วิธีแก้ปัญหาที่บันทึกไว้</span>
               <span style="font: 400 12px/1.8 var(--font-th); color: var(--ink-2)">{{ t.resolutionNote }}</span>
