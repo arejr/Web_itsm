@@ -136,7 +136,6 @@ async function submit() {
           id="nt-requester"
           v-model="form.requesterEmployeeId"
           class="input"
-          placeholder="พิมพ์รหัสพนักงาน แล้วระบบจะค้นชื่อให้อัตโนมัติ"
           autocomplete="off"
         />
         <p v-if="lookingUp" class="requester-hint mb-0">กำลังค้นหา…</p>
@@ -154,7 +153,7 @@ async function submit() {
 
       <div>
         <label class="field-label" for="nt-title">ชื่อปัญหา *</label>
-        <input id="nt-title" v-model="form.title" class="input" placeholder="เช่น เครื่องพิมพ์ชั้น 3 พิมพ์งานไม่ออก" />
+        <input id="nt-title" v-model="form.title" class="input" />
       </div>
 
       <div>
