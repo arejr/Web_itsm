@@ -268,6 +268,27 @@ async function req(m, path, t, body) {
   const del = await req('DELETE', `/users/${nu.j._id}`, admin);
   check('Admin ลบผู้ใช้ได้', del.status === 200);
 
+  // ระบบออกรหัสพนักงานให้เองตามบทบาท ไล่จากเลขสูงสุดที่มีอยู่
+  const autoEmp = await req('POST','/users', admin, {
+    name:'ทดสอบ ออกรหัสอัตโนมัติ', email:`auto1${Date.now()}@company.co.th`, role:'employee'
+  });
+  check('ระบบออกรหัสพนักงานให้เองเมื่อไม่ได้ระบุ',
+    autoEmp.status === 201 && /^EMP\d{3,}$/.test(autoEmp.j.employeeId || ''), autoEmp.j.employeeId||autoEmp.j.message);
+  const autoEmp2 = await req('POST','/users', admin, {
+    name:'ทดสอบ ออกรหัสอัตโนมัติ 2', email:`auto2${Date.now()}@company.co.th`, role:'employee'
+  });
+  const n1 = parseInt(String(autoEmp.j.employeeId).slice(3), 10);
+  const n2 = parseInt(String(autoEmp2.j.employeeId).slice(3), 10);
+  check('รหัสถัดไปเดินหน้าทีละหนึ่ง', n2 === n1 + 1, `${autoEmp.j.employeeId} → ${autoEmp2.j.employeeId}`);
+
+  const autoTech = await req('POST','/users', admin, {
+    name:'ทดสอบ ช่างไอที', email:`auto3${Date.now()}@company.co.th`, role:'tech'
+  });
+  check('รหัสใช้อักษรนำหน้าตามบทบาท',
+    /^IT\d{3,}$/.test(autoTech.j.employeeId || ''), autoTech.j.employeeId);
+  check('เข้าสู่ระบบด้วยรหัสที่ระบบออกให้ได้', !!(await login(autoEmp.j.employeeId)));
+  for (const id of [autoEmp.j._id, autoEmp2.j._id, autoTech.j._id]) await req('DELETE', `/users/${id}`, admin);
+
   // รหัสพนักงานประจำตัว — ตั้งได้ ใช้เข้าสู่ระบบได้ ห้ามซ้ำ และเว้นว่างได้หลายคน
   const stamp = Date.now();
   const withId = await req('POST','/users', admin, {
@@ -286,15 +307,17 @@ async function req(m, path, t, body) {
   check('ข้อความบอกชัดว่าซ้ำที่รหัสพนักงาน',
     String(dupId.j.message || '').includes('รหัสพนักงาน'), dupId.j.message||'');
 
-  // เว้นรหัสว่างได้มากกว่าหนึ่งคน — ดัชนี unique ต้องไม่นับสตริงว่างเป็นค่าซ้ำ
+  // ส่งรหัสว่างมา = ให้ระบบออกให้เอง และต้องไม่ชนกันเมื่อสร้างหลายคนติดกัน
   const blankA = await req('POST','/users', admin, { name:'ว่าง A', email:`ba${stamp}@company.co.th`, employeeId:'', role:'employee' });
   const blankB = await req('POST','/users', admin, { name:'ว่าง B', email:`bb${stamp}@company.co.th`, employeeId:'', role:'employee' });
-  check('เว้นรหัสพนักงานว่างได้มากกว่าหนึ่งคน',
+  check('ส่งรหัสว่างมาแล้วสร้างได้ทั้งสองคน',
     blankA.status === 201 && blankB.status === 201, `${blankA.status}/${blankB.status} ${blankB.j.message||''}`);
-  check('รหัสที่เว้นว่างไม่ถูกเก็บเป็นสตริงว่าง', blankA.j.employeeId === undefined, JSON.stringify(blankA.j.employeeId));
+  check('ระบบออกรหัสให้คนละอันไม่ชนกัน',
+    !!blankA.j.employeeId && blankA.j.employeeId !== blankB.j.employeeId,
+    `${blankA.j.employeeId} / ${blankB.j.employeeId}`);
 
   const addId = await req('PATCH', `/users/${blankA.j._id}`, admin, { employeeId: `E2ELATE${stamp}` });
-  check('เพิ่มรหัสให้ผู้ใช้ที่ยังไม่มีทีหลังได้',
+  check('แก้รหัสพนักงานทีหลังได้',
     addId.status === 200 && addId.j.employeeId === `E2ELATE${stamp}`, addId.j.message||'');
   const clearId = await req('PATCH', `/users/${blankA.j._id}`, admin, { employeeId: '   ' });
   check('ล้างรหัสพนักงานออกได้', clearId.status === 200 && !clearId.j.employeeId, JSON.stringify(clearId.j.employeeId));

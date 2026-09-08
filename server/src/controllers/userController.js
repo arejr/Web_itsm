@@ -4,6 +4,31 @@ const Ticket = require('../models/Ticket');
 // รหัสพนักงานที่ผู้ใช้พิมพ์เข้ามาอาจมีอักขระพิเศษ ต้อง escape ก่อนทำเป็น RegExp
 const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// อักษรนำหน้ารหัสพนักงานตามบทบาท
+const ID_PREFIX = { admin: 'ADM', helpdesk: 'HD', tech: 'IT', employee: 'EMP' };
+
+/**
+ * ออกรหัสพนักงานถัดไปของบทบาทนั้น เช่น EMP101 แล้วต่อด้วย EMP102
+ * ไล่จากเลขสูงสุดที่มีอยู่ +1 เพื่อไม่ไปชนรหัสเดิมที่เคยออกไปแล้ว
+ * ความยาวเลขอิงจากรหัสที่ยาวที่สุดที่มีอยู่ อย่างน้อย 3 หลัก
+ */
+async function nextEmployeeId(role) {
+  const prefix = ID_PREFIX[role] || 'EMP';
+  const rows = await User.find({ employeeId: new RegExp(`^${prefix}\\d+$`, 'i') })
+    .select('employeeId')
+    .lean();
+
+  let max = 0;
+  let width = 3;
+  for (const r of rows) {
+    const digits = String(r.employeeId).slice(prefix.length);
+    const n = parseInt(digits, 10);
+    if (Number.isFinite(n) && n > max) max = n;
+    if (digits.length > width) width = digits.length;
+  }
+  return `${prefix}${String(max + 1).padStart(width, '0')}`;
+}
+
 // GET /api/users — รายชื่อสมาชิกทั้งหมด (Admin)
 exports.list = async (req, res, next) => {
   try {
@@ -86,6 +111,25 @@ exports.create = async (req, res, next) => {
   try {
     const payload = { ...req.body };
     if (!payload.password) payload.password = 'Password123!';
+
+    // ไม่ได้ระบุรหัสมา ระบบออกให้เองตามบทบาท
+    // ถ้าเผอิญมีคนสร้างพร้อมกันจนรหัสชนกัน ให้ลองออกเลขถัดไปอีกครั้ง
+    if (!String(payload.employeeId || '').trim()) {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        payload.employeeId = await nextEmployeeId(payload.role);
+        try {
+          const user = await User.create(payload);
+          const safe = user.toObject();
+          delete safe.password;
+          return res.status(201).json(safe);
+        } catch (err) {
+          const clash = err.code === 11000 && err.keyValue && 'employeeId' in err.keyValue;
+          if (!clash) throw err;
+        }
+      }
+      return res.status(409).json({ message: 'ออกรหัสพนักงานอัตโนมัติไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' });
+    }
+
     const user = await User.create(payload);
     const safe = user.toObject();
     delete safe.password;

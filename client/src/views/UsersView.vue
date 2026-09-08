@@ -19,7 +19,7 @@ const editing = ref(null);
 const busy = ref(false);
 
 const blank = () => ({
-  name: '', email: '', employeeId: '', password: '', role: 'employee',
+  name: '', email: '', password: '', role: 'employee',
   department: '', group: '', skill: '', phone: '', contact: '', orgCode: ''
 });
 const form = ref(blank());
@@ -62,7 +62,7 @@ function startCreate() {
 function startEdit(u) {
   editing.value = u;
   form.value = {
-    name: u.name, email: u.email, employeeId: u.employeeId || '', password: '',
+    name: u.name, email: u.email, password: '',
     role: u.role, department: u.department || '', group: u.group || '',
     skill: u.skill || '', phone: u.phone || '', contact: u.contact || '', orgCode: u.orgCode || ''
   };
@@ -86,7 +86,8 @@ async function save() {
     } else {
       const { data } = await api.post('/users', form.value);
       users.value.unshift(data);
-      ui.success(`เพิ่มผู้ใช้ ${data.name} เรียบร้อยแล้ว (รหัสผ่านเริ่มต้น: ${form.value.password || 'Password123!'})`);
+      // บอกรหัสที่ระบบออกให้ไปด้วย เพราะผู้ดูแลไม่ได้เป็นคนกรอกเองแล้ว
+      ui.success(`เพิ่มผู้ใช้ ${data.name} รหัส ${data.employeeId} เรียบร้อยแล้ว (รหัสผ่านเริ่มต้น: ${form.value.password || 'Password123!'})`);
     }
     showForm.value = false;
   } catch (err) {
@@ -226,7 +227,6 @@ async function remove(u) {
         <div class="form-grid">
           <div><label class="field-label">ชื่อ–สกุล *</label><input v-model="form.name" class="input input--sm" /></div>
           <div><label class="field-label">อีเมล *</label><input v-model="form.email" class="input input--sm" type="email" /></div>
-          <div><label class="field-label">รหัสพนักงาน</label><input v-model="form.employeeId" class="input input--sm" /></div>
           <div>
             <label class="field-label">บทบาท</label>
             <select v-model="form.role" class="input input--sm">
