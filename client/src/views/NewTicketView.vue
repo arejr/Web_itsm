@@ -24,6 +24,8 @@ const CHANNELS = ['เว็บไซต์', 'โทรศัพท์', 'Walk-
 
 // Helpdesk ที่ออกตั๋วเองมอบหมายผู้รับผิดชอบได้เลย ไม่ต้องรอคัดกรองอีกรอบ
 const canAssign = computed(() => auth.isHelpdesk);
+// แผงแนะนำให้ลองแก้เองก่อนและสายด่วน IT มีไว้สำหรับพนักงาน ไม่ใช่ทีม IT เอง
+const showSelfHelp = computed(() => !auth.isHelpdesk);
 const files = ref([]);
 const previews = ref([]);
 const busy = ref(false);
@@ -206,7 +208,7 @@ async function submit() {
       </div>
     </form>
 
-    <div class="d-flex flex-column gap-3">
+    <div v-if="showSelfHelp" class="d-flex flex-column gap-3">
       <div class="card-surface p-3 d-flex flex-column gap-2">
         <div class="card-title-xs">ปัญหาที่พบบ่อย — ลองแก้เองก่อน</div>
         <div v-for="s in selfHelp" :key="s.title" class="selfhelp">
@@ -228,6 +230,8 @@ async function submit() {
 
 <style scoped>
 .new-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+/* ไม่มีแผงช่วยเหลือด้านข้าง (Helpdesk) ให้ฟอร์มกินเต็มความกว้าง */
+.new-layout:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
 .new-form { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
 .new-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .new-form__foot {
