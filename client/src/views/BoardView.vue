@@ -34,8 +34,14 @@ function setScope(v) {
   reload();
 }
 
+// เจ้าหน้าที่ IT ไม่เห็นคอลัมน์รอคัดกรอง เพราะตั๋วที่ยังไม่มอบหมายไม่ใช่งานของตน
+// การคัดกรองเป็นหน้าที่ของ IT Helpdesk
+const visibleColumns = computed(() =>
+  COLUMNS.filter((col) => !(auth.isTech && col.key === 'new'))
+);
+
 const columns = computed(() =>
-  COLUMNS.map((col) => ({
+  visibleColumns.value.map((col) => ({
     ...col,
     items: store.items.filter((t) => col.accepts.includes(t.status))
   }))
@@ -87,7 +93,7 @@ async function onDrop(col) {
       <span class="text-muted-3" style="font-size: 11.5px">ลากการ์ดข้ามคอลัมน์เพื่อเปลี่ยนสถานะการทำงาน</span>
     </div>
 
-    <div class="board">
+    <div class="board" :style="{ '--board-cols': columns.length }">
       <div
         v-for="col in columns"
         :key="col.key"
@@ -137,7 +143,7 @@ async function onDrop(col) {
 </template>
 
 <style scoped>
-.board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.board { display: grid; grid-template-columns: repeat(var(--board-cols, 4), minmax(0, 1fr)); gap: 12px; align-items: start; }
 .board__col {
   background: #f4f6f8;
   border: 1px solid rgba(16, 24, 32, 0.08);
