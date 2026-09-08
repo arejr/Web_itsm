@@ -42,6 +42,22 @@ async function req(m, path, t, body) {
   check('ระบบออกเลขตั๋วอัตโนมัติ', /^INC-\d{4}-\d{6}$/.test(created.j.code||''), created.j.code);
   check('ระบบตั้ง SLA อัตโนมัติ', !!created.j.slaDueAt);
 
+  // Helpdesk ออกตั๋วให้ตัวเองได้ ส่วนบทบาทอื่นออกตั๋วไม่ได้
+  const deskTicket = await req('POST','/tickets', helpdesk, {
+    title:'ทดสอบ E2E — Helpdesk ออกตั๋วเอง', description:'เครื่องสแกนที่เคาน์เตอร์ไม่ทำงาน'
+  });
+  check('Helpdesk ออกตั๋วเองได้',
+    deskTicket.status === 201 && deskTicket.j.status === 'new', deskTicket.j.message||'');
+  check('ตั๋วที่ Helpdesk ออกเองมีตัวเองเป็นผู้แจ้ง',
+    deskTicket.j.requesterName === 'พิมพ์ชนก ดีใจ', deskTicket.j.requesterName);
+  check('ผู้ออกตั๋วไม่ได้รับแจ้งเตือนตั๋วใหม่ของตัวเอง',
+    !((await req('GET','/notifications', helpdesk)).j.items || [])
+      .some(n => n.ticketCode === deskTicket.j.code));
+  check('เจ้าหน้าที่ IT ออกตั๋วเองไม่ได้',
+    (await req('POST','/tickets', tech, { title:'x', description:'x' })).status === 403);
+  check('ผู้ดูแลระบบออกตั๋วเองไม่ได้',
+    (await req('POST','/tickets', admin, { title:'x', description:'x' })).status === 403);
+
   // พนักงานเห็นเฉพาะตั๋วของตัวเอง
   const empList = await req('GET','/tickets', emp);
   check('พนักงานเห็นเฉพาะตั๋วของตนเอง',
@@ -172,12 +188,6 @@ async function req(m, path, t, body) {
   check('ปิดตั๋วที่ปิดไปแล้วซ้ำไม่ได้', again.status === 400, again.j.message || '');
   check('บทความ KB ไม่ถูกสร้างซ้ำ',
     (await req('GET','/articles', newOwner)).j.length === kbAfter);
-
-  // 7. แจ้งปัญหาได้เฉพาะพนักงานบริษัท
-  const staffCreate = { title: 'ทีม IT ไม่ควรแจ้งปัญหาเองได้', description: 'x' };
-  check('Helpdesk แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', helpdesk, staffCreate)).status === 403);
-  check('เจ้าหน้าที่ IT แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', tech, staffCreate)).status === 403);
-  check('Admin แจ้งปัญหาเองไม่ได้', (await req('POST', '/tickets', admin, staffCreate)).status === 403);
 
   const byEmp = await req('POST', '/tickets', emp, { title: 'พนักงานแจ้งปัญหาได้', description: 'x' });
   check('พนักงานบริษัทแจ้งปัญหาได้', byEmp.status === 201, byEmp.j.message || '');

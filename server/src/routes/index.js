@@ -31,7 +31,7 @@ router.delete('/users/:id', requireAuth, requireRole('admin'), users.remove);
 router.get('/tickets', requireAuth, tickets.list);
 // แจ้งปัญหาเป็นหน้าที่ของพนักงานบริษัทเท่านั้น
 // ทีม IT มีหน้าที่รับเรื่องและแก้ไข ไม่ใช่ผู้แจ้ง
-router.post('/tickets', requireAuth, requireRole('employee'), upload.array('attachments', 5), tickets.create);
+router.post('/tickets', requireAuth, requireRole('employee', 'helpdesk'), upload.array('attachments', 5), tickets.create);
 router.get('/tickets/:id', requireAuth, tickets.get);
 // ผู้ดูแลระบบดูตั๋วงานได้อย่างเดียว การจัดการงานเป็นหน้าที่ของ Helpdesk และเจ้าหน้าที่ IT
 router.patch('/tickets/:id/triage', requireAuth, requireRole('helpdesk'), tickets.triage);

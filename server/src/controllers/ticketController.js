@@ -113,7 +113,8 @@ exports.create = async (req, res, next) => {
 
     const category = categoryId ? await Category.findById(categoryId) : await Category.findOne({ key: 'other' });
 
-    // แจ้งปัญหาได้เฉพาะพนักงานบริษัท ผู้แจ้งจึงเป็นผู้ที่ล็อกอินอยู่เสมอ
+    // แจ้งปัญหาได้เฉพาะพนักงานบริษัทและ IT Helpdesk ที่ออกตั๋วให้ตัวเอง
+    // ทั้งสองกรณีผู้แจ้งคือคนที่ล็อกอินอยู่เสมอ ไม่มีการออกตั๋วแทนคนอื่น
     const requester = req.user;
     const prio = priority || 'medium';
     const ticket = new Ticket({
@@ -161,7 +162,12 @@ exports.create = async (req, res, next) => {
 
     // ตั๋วที่แจ้งเข้ามาใหม่เป็นหน้าที่ของ Helpdesk ในการคัดกรองและมอบหมาย
     // บทบาทอื่นจะได้รับแจ้งเตือนเฉพาะตั๋วที่ตนเกี่ยวข้องด้วย
-    const desk = await User.find({ role: 'helpdesk', active: true }).select('_id');
+    // ถ้า Helpdesk เป็นคนออกตั๋วเอง ไม่ต้องเด้งแจ้งเตือนกลับไปหาตัวเอง
+    const desk = await User.find({
+      role: 'helpdesk',
+      active: true,
+      _id: { $ne: requester._id }
+    }).select('_id');
     await notify(io, {
       userIds: desk.map((u) => u._id),
       tag: 'ตั๋วใหม่',
