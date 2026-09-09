@@ -118,10 +118,6 @@ watch(
 
         <template v-if="logoutState === 'confirm'">
           <h2 class="logout-title">ต้องการออกจากระบบใช่หรือไม่</h2>
-          <p class="logout-text">
-            คุณกำลังเข้าใช้งานในชื่อ <strong>{{ auth.user?.name }}</strong> ({{ auth.roleLabel }}) —
-            งานที่ยังไม่บันทึกในแบบฟอร์มจะหายไป
-          </p>
           <div class="d-flex gap-2">
             <button class="btn-ghost flex-fill py-3" type="button" @click="logoutState = null">กลับไปทำงานต่อ</button>
             <button class="btn-slate flex-fill py-3" type="button" @click="confirmLogout">ออกจากระบบ</button>
@@ -216,7 +212,6 @@ watch(
   font: 600 13px var(--font-mono); color: #dbe7f0;
 }
 .logout-title { font: 600 19px var(--font-th); letter-spacing: -0.2px; margin: 0; }
-.logout-text { font: 400 12.5px/1.85 var(--font-th); color: var(--muted); margin: 0; }
 
 @media (min-width: 1200px) {
   .shell__content { padding: 22px 28px 44px; gap: 18px; }
