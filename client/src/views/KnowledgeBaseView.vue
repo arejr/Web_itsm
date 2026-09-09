@@ -142,7 +142,6 @@ async function createArticle() {
       <div class="kb-modal__card">
         <div class="d-flex align-items-center gap-2 mb-2">
           <span class="pill" :style="tint(active)">{{ active.category?.label || 'ทั่วไป' }}</span>
-          <span class="mono kb-card__ref">{{ active.ref }}</span>
           <div class="flex-fill"></div>
           <button class="kb-modal__close" type="button" aria-label="ปิด" @click="active = null">×</button>
         </div>
