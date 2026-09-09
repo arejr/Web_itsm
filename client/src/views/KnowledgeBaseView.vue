@@ -126,7 +126,6 @@ async function createArticle() {
       >
         <div class="d-flex align-items-center gap-2">
           <span class="pill" :style="tint(a)">{{ a.category?.label || 'ทั่วไป' }}</span>
-          <span class="mono kb-card__ref">{{ a.ref }}</span>
         </div>
         <div class="kb-card__title">{{ a.title }}</div>
         <div class="kb-card__summary">{{ a.summary }}</div>
@@ -161,7 +160,6 @@ async function createArticle() {
 .kb-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .kb-card { padding: 17px 18px; display: flex; flex-direction: column; gap: 9px; cursor: pointer; }
 .kb-card:hover { box-shadow: 0 6px 18px rgba(16, 24, 32, 0.09); }
-.kb-card__ref { font: 400 10.5px var(--font-mono); color: var(--muted-3); }
 .kb-card__title { font: 600 13.5px/1.45 var(--font-th); }
 .kb-card__summary {
   font: 400 12px/1.65 var(--font-th); color: var(--muted);
